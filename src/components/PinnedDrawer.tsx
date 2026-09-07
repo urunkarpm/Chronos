@@ -59,7 +59,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
         }}
       />
 
-      <aside className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-20 md:right-5 md:left-auto z-40 w-full md:w-96 md:max-w-sm glass-panel-gold rounded-t-3xl md:rounded-3xl p-4 md:p-6 shadow-2xl max-h-[85vh] md:max-h-[calc(100vh-6.5rem)] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200">
+      <aside className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-20 md:right-5 md:left-auto z-40 w-full md:w-96 md:max-w-sm glass-panel-gold rounded-t-3xl md:rounded-3xl p-4 md:p-6 pb-[max(1rem,calc(env(safe-area-inset-bottom)+1rem))] md:pb-6 shadow-2xl max-h-[85vh] md:max-h-[calc(100vh-6.5rem)] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200">
         {/* Mobile drag bar indicator */}
         <div
           className="w-12 h-1.5 bg-gold-500/40 rounded-full mx-auto mb-3 md:hidden cursor-pointer active:bg-gold-400 transition-colors"

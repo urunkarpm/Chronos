@@ -46,7 +46,8 @@ export const MapComponent: React.FC<MapProps> = ({
       inertiaDeceleration: 3000,
       minZoom: 2,
       maxZoom: 18,
-      zoomSnap: 0.1,
+      zoomSnap: 0.5,
+      zoomDelta: 0.5,
     });
 
     // Satellite Imagery Base Layer

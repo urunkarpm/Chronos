@@ -182,6 +182,8 @@
   -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  outline: 1px solid transparent;
+  margin: -0.5px !important;
 }
 
 .leaflet-marker-icon {

@@ -185,7 +185,7 @@ export function App() {
 
       {/* Floating Timezone Tiles Overlay - Horizontal Swipe Deck on Mobile, Responsive Grid on Desktop */}
       <div
-        className={`absolute inset-x-0 bottom-3 sm:bottom-9 z-20 px-3 sm:px-6 transition-all duration-500 transform ${
+        className={`absolute inset-x-0 bottom-[max(12px,env(safe-area-inset-bottom))] sm:bottom-9 z-20 px-3 sm:px-6 pb-1 sm:pb-0 transition-all duration-500 transform ${
           pinnedRegionId
             ? 'translate-y-[120%] opacity-0 pointer-events-none'
             : 'translate-y-0 opacity-100 pointer-events-auto'
@@ -223,7 +223,7 @@ export function App() {
 
       {/* Restore All Tiles Button (Appears when map is in center stage mode) */}
       {pinnedRegionId && (
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-[max(48px,calc(env(safe-area-inset-bottom)+16px))] left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => {
               if (soundEnabled) playUISound('zoom');
