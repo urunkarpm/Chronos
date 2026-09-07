@@ -42,19 +42,19 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         if (soundEnabled) playUISound('chime');
         onSelect(region);
       }}
-      className={`group relative p-3 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all duration-300 transform hover:-translate-y-1 ${
+      className={`group relative p-2.5 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] ${
         isPinned
-          ? 'border-2 border-gold-500 bg-navy-900/90 scale-[1.02]'
+          ? 'border-2 border-gold-500 bg-navy-900/90 scale-[1.01]'
           : 'hover:border-gold-500/50'
       }`}
     >
       {/* Mobile-Optimized Card Layout (< sm) */}
-      <div className="flex sm:hidden flex-col justify-between h-full gap-2">
+      <div className="flex sm:hidden flex-col justify-between h-full gap-1.5">
         {/* Top Row: Flag, City Name & Remove Button */}
         <div className="flex items-center justify-between gap-1.5">
-          <div className="flex items-center gap-2 overflow-hidden min-w-0">
-            <FlagIcon countryCode={region.countryCode} alt={region.country} className="w-5 h-3.5 rounded-xs shadow-xs shrink-0" />
-            <h3 className="font-semibold text-xs text-slate-100 group-hover:text-gold-400 transition-colors truncate">
+          <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
+            <FlagIcon countryCode={region.countryCode} alt={region.country} className="w-4.5 h-3 rounded-xs shadow-xs shrink-0" />
+            <h3 className="font-semibold text-xs text-slate-100 group-hover:text-gold-400 transition-colors truncate leading-tight">
               {region.city}
             </h3>
           </div>
@@ -66,7 +66,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
               onRemove(region.id);
             }}
             title="Remove tile from view"
-            className="btn-close min-w-[26px] min-h-[26px] p-1 text-slate-400 hover:text-rose-400 -mr-1"
+            className="btn-close min-w-[24px] min-h-[24px] p-0.5 text-slate-400 hover:text-rose-400 -mr-1"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -75,7 +75,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         {/* Main Time Readout */}
         <div className="flex items-baseline justify-between font-mono my-0.5">
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold tracking-tight text-white group-hover:text-gold-300 transition-colors">
+            <span className="text-xl font-bold tracking-tight text-white group-hover:text-gold-300 transition-colors leading-none">
               {formattedTime.hoursMinutes}
             </span>
             {!is24Hour && (
@@ -103,7 +103,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         </div>
 
         {/* Bottom Row: UTC Offset & Relative Time */}
-        <div className="flex items-center justify-between pt-1.5 border-t border-white/10 text-[9px] font-mono">
+        <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[9px] font-mono">
           <span className="badge-gold text-[9px] py-0 px-1.5">
             {utcOffsetStr}
           </span>

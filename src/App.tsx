@@ -185,7 +185,7 @@ export function App() {
 
       {/* Floating Timezone Tiles Overlay - Horizontal Swipe Deck on Mobile, Responsive Grid on Desktop */}
       <div
-        className={`absolute inset-x-0 bottom-[max(12px,env(safe-area-inset-bottom))] sm:bottom-9 z-20 px-3 sm:px-6 pb-1 sm:pb-0 transition-all duration-500 transform ${
+        className={`absolute inset-x-0 bottom-[max(16px,calc(env(safe-area-inset-bottom)+8px))] sm:bottom-9 z-20 px-3 sm:px-6 pb-1 sm:pb-0 transition-all duration-500 transform ${
           pinnedRegionId
             ? 'translate-y-[120%] opacity-0 pointer-events-none'
             : 'translate-y-0 opacity-100 pointer-events-auto'
@@ -193,12 +193,12 @@ export function App() {
       >
         <div className="max-w-7xl mx-auto">
           {/* Mobile Swipe Cue Banner */}
-          <div className="sm:hidden flex items-center justify-between text-[11px] font-mono text-slate-400 px-1 mb-1.5 font-medium">
+          <div className="sm:hidden flex items-center justify-between text-[11px] font-mono text-slate-400 px-1 mb-1 font-medium">
             <span>Swipe cities horizontally &rarr;</span>
             <span className="badge-gold text-[9px] py-0.5">{visibleTiles.length} Active</span>
           </div>
 
-          <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 overflow-x-auto sm:overflow-x-visible overflow-y-hidden sm:overflow-y-auto max-h-[140px] sm:max-h-[38vh] md:max-h-[36vh] p-1 custom-scrollbar snap-x snap-mandatory touch-pan-x sm:touch-pan-y">
+          <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 overflow-x-auto sm:overflow-x-visible overflow-y-hidden sm:overflow-y-auto max-h-[160px] sm:max-h-[38vh] md:max-h-[36vh] py-2.5 px-1 sm:p-1 custom-scrollbar snap-x snap-mandatory touch-pan-x sm:touch-pan-y">
             {visibleTiles.map((region) => (
               <div key={region.id} className="shrink-0 w-[200px] xs:w-[220px] sm:w-auto snap-center">
                 <TimeTile

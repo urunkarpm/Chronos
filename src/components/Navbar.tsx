@@ -348,7 +348,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Slide-Down Settings & Menu Sheet */}
       {isMobileMenuOpen && (
-        <div className="md:hidden px-4 py-4 border-t border-gold-500/20 bg-navy-950/95 backdrop-blur-xl animate-in slide-in-from-top-3 duration-200 space-y-3">
+        <div className="md:hidden px-4 py-4 border-t border-gold-500/20 bg-navy-950/75 backdrop-blur-md animate-in slide-in-from-top-3 duration-200 space-y-3">
           <div className="flex items-center justify-between text-xs font-mono pb-2.5 border-b border-slate-800/80">
             <span className="text-slate-400">Your Local Time</span>
             <span className="text-gold-400 font-bold">{localTimeStr}</span>
