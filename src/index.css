@@ -177,6 +177,8 @@
 .leaflet-container {
   background: #050811 !important;
   font-family: 'Outfit', sans-serif !important;
+  touch-action: pan-x pan-y !important;
+  overscroll-behavior: none !important;
 }
 
 .leaflet-map-pane,
