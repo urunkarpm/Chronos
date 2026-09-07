@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy-950 text-slate-100 antialiased overflow-hidden selection:bg-gold-500 selection:text-navy-950;
+  }
+}
+
+/* Hide scrollbars globally across all browsers while retaining scroll functionality */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.custom-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(11, 15, 25, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Sleek Liquid Glass Header */
+.liquid-glass-header {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 30, 49, 0.88) 0%,
+    rgba(15, 23, 42, 0.92) 50%,
+    rgba(10, 15, 30, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.liquid-glass-pill {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease-in-out;
+}
+
+.liquid-glass-pill:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
+.glass-panel-gold {
+  background: rgba(16, 21, 35, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(22, 31, 51, 0.75) 0%, rgba(11, 15, 25, 0.88) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease-in-out;
+}
+
+.glass-card:hover {
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+@layer components {
+  /* Design System: Unified Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-gold-500 text-navy-950 hover:bg-gold-400 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none cursor-pointer border border-gold-400/40 select-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl glass-card text-slate-200 hover:text-white hover:border-gold-500/50 hover:bg-white/10 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none cursor-pointer border border-slate-700/60 select-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-medium rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/70 active:scale-95 transition-all duration-200 cursor-pointer select-none;
+  }
+
+  .btn-icon {
+    @apply inline-flex items-center justify-center p-2 min-w-[38px] min-h-[38px] rounded-xl glass-card text-slate-300 hover:text-white hover:border-gold-500/50 hover:bg-white/10 active:scale-95 transition-all duration-200 cursor-pointer border border-slate-700/60 shrink-0 select-none;
+  }
+
+  .btn-close {
+    @apply inline-flex items-center justify-center p-2 min-w-[36px] min-h-[36px] rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 active:scale-95 transition-all duration-200 cursor-pointer shrink-0 select-none;
+  }
+
+  /* Form Controls */
+  .input-standard {
+    @apply w-full px-3.5 py-2.5 text-xs bg-navy-900/90 text-slate-100 placeholder-slate-500 rounded-xl border border-slate-700/80 focus:border-gold-500 focus:outline-none transition-all font-sans;
+  }
+
+  .select-standard {
+    @apply px-3.5 py-2 text-xs font-semibold bg-navy-950 text-slate-100 rounded-xl border border-slate-700/80 focus:border-gold-500 focus:outline-none transition-all font-sans cursor-pointer;
+  }
+
+  /* Badges & Chips */
+  .badge-gold {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-semibold rounded-full bg-gold-500/10 text-gold-400 border border-gold-500/30;
+  }
+
+  .badge-slate {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-medium rounded-full bg-navy-950/80 text-slate-300 border border-slate-700/60;
+  }
+
+  .badge-emerald {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-semibold rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/35;
+  }
+
+  .badge-amber {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-semibold rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/35;
+  }
+
+  /* Filter Tabs */
+  .pill-filter {
+    @apply px-3.5 py-1.5 text-xs font-medium rounded-xl transition-all duration-200 shrink-0 active:scale-95 cursor-pointer select-none;
+  }
+
+  .pill-filter-active {
+    @apply bg-gold-500 text-navy-950 font-bold border border-gold-400/50;
+  }
+
+  .pill-filter-inactive {
+    @apply text-slate-300 liquid-glass-pill hover:text-white hover:border-gold-500/40;
+  }
+}
+
+/* 120Hz GPU Compositor Acceleration for Leaflet */
+.leaflet-container {
+  background: #050811 !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.leaflet-map-pane,
+.leaflet-tile-pane,
+.leaflet-marker-pane,
+.leaflet-overlay-pane,
+.leaflet-tile-container {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.leaflet-tile {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.leaflet-marker-icon {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background-color: rgba(11, 15, 25, 0.9) !important;
+  color: #D4AF37 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: rgba(26, 35, 56, 0.9) !important;
+  color: #FFF !important;
+}
+
+.leaflet-attribution-flag {
+  display: none !important;
+}
+
+.leaflet-container .leaflet-control-attribution {
+  background: rgba(7, 10, 18, 0.8) !important;
+  color: #64748b !important;
+  backdrop-filter: blur(4px);
+  font-size: 10px;
+}
+
+/* Custom Marker Styling */
+.custom-leaflet-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom High-Res World Map Image Styling */
+.custom-highres-world-map {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  pointer-events: none;
+}
+
