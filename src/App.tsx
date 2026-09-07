@@ -152,7 +152,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="relative w-full h-screen h-[100dvh] bg-navy-950 overflow-hidden text-slate-100 font-sans">
+    <div className="fixed inset-0 w-full h-full h-[100dvh] bg-navy-950 overflow-hidden text-slate-100 font-sans overscroll-none select-none">
       {/* 100% Viewport Interactive Satellite Map Layer */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Map

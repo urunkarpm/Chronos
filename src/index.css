@@ -3,8 +3,25 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
   body {
-    @apply bg-navy-950 text-slate-100 antialiased overflow-hidden selection:bg-gold-500 selection:text-navy-950;
+    @apply bg-navy-950 text-slate-100 antialiased selection:bg-gold-500 selection:text-navy-950;
   }
 }
 
