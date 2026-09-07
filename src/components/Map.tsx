@@ -10,6 +10,7 @@ interface MapProps {
   onResetMap: () => void;
   is24Hour: boolean;
   currentTime: Date;
+  resetTrigger?: number;
 }
 
 export const MapComponent: React.FC<MapProps> = ({
@@ -19,6 +20,7 @@ export const MapComponent: React.FC<MapProps> = ({
   onResetMap,
   is24Hour,
   currentTime,
+  resetTrigger,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -163,7 +165,7 @@ export const MapComponent: React.FC<MapProps> = ({
     }, 40);
 
     return () => clearTimeout(timer);
-  }, [pinnedRegionId]);
+  }, [pinnedRegionId, resetTrigger]);
 
   // Handle window resize to keep Leaflet map container bounds in sync
   useEffect(() => {

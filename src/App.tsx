@@ -59,6 +59,7 @@ export function App() {
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
 
   // Real-time 1-second clock tick
   useEffect(() => {
@@ -132,6 +133,8 @@ export function App() {
 
   const handleResetMap = useCallback(() => {
     setPinnedRegionId(null);
+    setSelectedContinent('All');
+    setResetTrigger((prev) => prev + 1);
   }, []);
 
   const handleAddRegion = useCallback((regionOrId: TimeRegion | string) => {
@@ -162,6 +165,7 @@ export function App() {
           onResetMap={handleResetMap}
           is24Hour={is24Hour}
           currentTime={currentTime}
+          resetTrigger={resetTrigger}
         />
       </div>
 
