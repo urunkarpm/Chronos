@@ -152,7 +152,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen bg-navy-950 overflow-hidden text-slate-100 font-sans">
+    <div className="relative w-full h-screen h-[100dvh] bg-navy-950 overflow-hidden text-slate-100 font-sans">
       {/* 100% Viewport Interactive Satellite Map Layer */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Map
@@ -185,7 +185,7 @@ export function App() {
 
       {/* Floating Timezone Tiles Overlay - Horizontal Swipe Deck on Mobile, Responsive Grid on Desktop */}
       <div
-        className={`absolute inset-x-0 bottom-[max(16px,calc(env(safe-area-inset-bottom)+8px))] sm:bottom-9 z-20 px-3 sm:px-6 pb-1 sm:pb-0 transition-all duration-500 transform ${
+        className={`absolute inset-x-0 bottom-8 xs:bottom-10 sm:bottom-9 z-20 px-3 sm:px-6 pb-1 sm:pb-0 transition-all duration-500 transform ${
           pinnedRegionId
             ? 'translate-y-[120%] opacity-0 pointer-events-none'
             : 'translate-y-0 opacity-100 pointer-events-auto'
@@ -198,7 +198,7 @@ export function App() {
             <span className="badge-gold text-[9px] py-0.5">{visibleTiles.length} Active</span>
           </div>
 
-          <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 overflow-x-auto sm:overflow-x-visible overflow-y-hidden sm:overflow-y-auto max-h-[160px] sm:max-h-[38vh] md:max-h-[36vh] py-2.5 px-1 sm:p-1 custom-scrollbar snap-x snap-mandatory touch-pan-x sm:touch-pan-y">
+          <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 overflow-x-auto sm:overflow-x-visible overflow-y-hidden sm:overflow-y-auto max-h-[170px] sm:max-h-[38vh] md:max-h-[36vh] py-3 px-1 sm:p-1 custom-scrollbar snap-x snap-mandatory touch-pan-x sm:touch-pan-y">
             {visibleTiles.map((region) => (
               <div key={region.id} className="shrink-0 w-[200px] xs:w-[220px] sm:w-auto snap-center">
                 <TimeTile
@@ -223,7 +223,7 @@ export function App() {
 
       {/* Restore All Tiles Button (Appears when map is in center stage mode) */}
       {pinnedRegionId && (
-        <div className="absolute bottom-[max(48px,calc(env(safe-area-inset-bottom)+16px))] left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-12 xs:bottom-16 sm:bottom-12 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => {
               if (soundEnabled) playUISound('zoom');
