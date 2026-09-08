@@ -1,5 +1,7 @@
 import tzlookup from 'tz-lookup';
-import { TimeRegion, Continent } from '../types';
+import { TimeRegion, Continent, TemperatureUnit } from '../types';
+import { getCurrencyForCountry } from './currencyService';
+
 
 function getFlagEmoji(countryCode: string): string {
   if (!countryCode || countryCode.length !== 2) return '🌐';
@@ -276,3 +278,114 @@ export async function searchGlobalLocations(
 
   return scoreAndSortMatches(q, [...localMatches, ...apiRegions]);
 }
+
+export interface UserLocationPreferences {
+  countryCode: string;
+  country: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  currencyCode: string;
+  tempUnit: TemperatureUnit;
+}
+
+const FAHRENHEIT_COUNTRIES = new Set(['US', 'BS', 'BZ', 'KY', 'PW', 'MH', 'FM', 'LR']);
+
+export async function detectUserLocationAndPreferences(): Promise<UserLocationPreferences | null> {
+  // 1. Primary: Native Browser HTML5 Geolocation API (Triggers Browser Permission Prompt)
+  if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+    try {
+      const coords = await new Promise<GeolocationCoordinates | null>((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve(pos.coords),
+          (err) => {
+            console.warn('Browser geolocation prompt dismissed or failed:', err);
+            resolve(null);
+          },
+          { timeout: 8000, maximumAge: 60000 }
+        );
+      });
+
+      if (coords) {
+        const { latitude: lat, longitude: lng } = coords;
+        // Reverse geocode coordinates to get country name & code
+        const geoRes = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+        );
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData && geoData.countryCode) {
+            const countryCode = geoData.countryCode.toUpperCase();
+            const currencyCode = getCurrencyForCountry(countryCode).code;
+            const tempUnit: TemperatureUnit = FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
+            const city = geoData.city || geoData.locality || geoData.principalSubdivision || '';
+            return {
+              countryCode,
+              country: geoData.countryName || countryCode,
+              city,
+              lat,
+              lng,
+              currencyCode,
+              tempUnit,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('HTML5 Geolocation attempt failed:', e);
+    }
+  }
+
+  // 2. Fallback: Silent IP-based Geolocation Lookup
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.country_code) {
+        const countryCode = data.country_code.toUpperCase();
+        const currencyCode = data.currency || getCurrencyForCountry(countryCode).code;
+        const tempUnit: TemperatureUnit = FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
+        return {
+          countryCode,
+          country: data.country_name || countryCode,
+          city: data.city,
+          lat: data.latitude,
+          lng: data.longitude,
+          currencyCode,
+          tempUnit,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('IP location fetch failed:', e);
+  }
+
+  // 3. Fallback: Browser Timezone inspection
+  try {
+    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (userTz) {
+      if (
+        userTz.startsWith('America/New_York') ||
+        userTz.startsWith('America/Chicago') ||
+        userTz.startsWith('America/Los_Angeles') ||
+        userTz.startsWith('America/Denver') ||
+        userTz.startsWith('US/')
+      ) {
+        return {
+          countryCode: 'US',
+          country: 'United States',
+          city: 'New York',
+          lat: 40.7128,
+          lng: -74.006,
+          currencyCode: 'USD',
+          tempUnit: 'F',
+        };
+      }
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+
+

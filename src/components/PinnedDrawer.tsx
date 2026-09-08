@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Sun,
@@ -7,15 +7,17 @@ import {
   Sunset,
   Compass,
   Calendar,
-  Building,
+  AlertTriangle,
+  ShieldCheck,
   Users,
   Clock,
   Check,
   ChevronDown,
   ChevronUp,
+  Thermometer,
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
-import { TimeRegion } from '../types';
+import { TimeRegion, TemperatureUnit, WeatherData, DisasterAlert } from '../types';
 import {
   formatTimeInZone,
   getUTCOffsetFormatted,
@@ -23,6 +25,8 @@ import {
   calculateSolarInfo,
   playUISound,
 } from '../utils/timeUtils';
+import { fetchWeatherData } from '../utils/weatherService';
+import { fetchDisasterAlerts } from '../utils/disasterAlertService';
 
 interface PinnedDrawerProps {
   region: TimeRegion;
@@ -32,6 +36,8 @@ interface PinnedDrawerProps {
   onClose: () => void;
   onSetAsReference: (id: string | null) => void;
   currentTime: Date;
+  tempUnit: TemperatureUnit;
+  onToggleTempUnit: (unit: TemperatureUnit) => void;
 }
 
 export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
@@ -42,8 +48,39 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
   onClose,
   onSetAsReference,
   currentTime,
+  tempUnit,
+  onToggleTempUnit,
 }) => {
   const [isExpandedMobile, setIsExpandedMobile] = useState(false);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState<boolean>(false);
+  const [disasterAlerts, setDisasterAlerts] = useState<DisasterAlert[]>([]);
+  const [isLoadingAlerts, setIsLoadingAlerts] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingWeather(true);
+    setIsLoadingAlerts(true);
+
+    fetchWeatherData(region.lat, region.lng).then((data) => {
+      if (isMounted) {
+        setWeather(data);
+        setIsLoadingWeather(false);
+      }
+    });
+
+    fetchDisasterAlerts(region.lat, region.lng).then((alerts) => {
+      if (isMounted) {
+        setDisasterAlerts(alerts);
+        setIsLoadingAlerts(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [region.lat, region.lng]);
+
 
   const formattedTime = formatTimeInZone(region.timezone, currentTime, is24Hour);
   const utcOffset = getUTCOffsetFormatted(region.timezone, currentTime);
@@ -129,6 +166,61 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               {relativeDiff.diffText}
             </span>
           </div>
+
+          {/* Minimalist Weather Readout & °C / °F Toggle */}
+          <div className="mt-2 pt-2 border-t border-gold-500/20 flex items-center justify-between px-1 text-[11px] font-sans">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Thermometer className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              {isLoadingWeather ? (
+                <span className="text-slate-400 text-[10px] animate-pulse">Loading temp...</span>
+              ) : weather ? (
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="font-extrabold text-amber-300 tabular-nums text-xs">
+                    {tempUnit === 'C' ? `${weather.temperatureC}°C` : `${weather.temperatureF}°F`}
+                  </span>
+                  <span className="text-slate-300 text-[10px] truncate">
+                    &bull; {weather.weatherDescription}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-slate-500 text-[10px]">Temp unavailable</span>
+              )}
+            </div>
+
+            {/* °C / °F Unit Toggle Button */}
+            <div className="inline-flex items-center p-0.5 rounded-lg bg-navy-900 border border-gold-500/40 text-[10px] font-bold shrink-0 ml-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (soundEnabled) playUISound('click');
+                  onToggleTempUnit('C');
+                }}
+                className={`px-1.5 py-0.5 rounded-md transition-all ${
+                  tempUnit === 'C'
+                    ? 'bg-gold-500 text-navy-950 font-extrabold shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Switch unit to Celsius (°C)"
+              >
+                °C
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (soundEnabled) playUISound('click');
+                  onToggleTempUnit('F');
+                }}
+                className={`px-1.5 py-0.5 rounded-md transition-all ${
+                  tempUnit === 'F'
+                    ? 'bg-gold-500 text-navy-950 font-extrabold shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Switch unit to Fahrenheit (°F)"
+              >
+                °F
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Action Controls */}
@@ -194,12 +286,30 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
 
           {/* Regional Details Grid */}
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
+            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 flex flex-col justify-between">
               <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5 font-sans font-bold">
-                <Building className="w-3.5 h-3.5 text-gold-400" />
-                Landmark
+                {disasterAlerts.length > 0 ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                ) : (
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                )}
+                Govt Alarm
               </div>
-              <div className="font-sans font-semibold text-slate-100 truncate">{region.landmark}</div>
+              <div className="font-sans font-semibold text-slate-100 truncate text-[11px]">
+                {isLoadingAlerts ? (
+                  <span className="text-slate-400 animate-pulse text-[10px]">Checking alerts...</span>
+                ) : disasterAlerts.length > 0 ? (
+                  <span className="text-rose-400 font-bold truncate flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping inline-block shrink-0" />
+                    {disasterAlerts[0].event}
+                  </span>
+                ) : (
+                  <span className="text-emerald-400 font-medium text-[10px] flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                    All Clear (No Warning)
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">

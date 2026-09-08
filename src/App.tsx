@@ -6,15 +6,66 @@ import { TimeTile } from './components/TimeTile';
 import { PinnedDrawer } from './components/PinnedDrawer';
 import { AddCityModal } from './components/AddCityModal';
 import { GLOBAL_REGIONS, INITIAL_DEFAULT_REGION_IDS } from './data/timezones';
-import { TimeRegion, Continent, MapProjection } from './types';
+import { TimeRegion, Continent, MapProjection, TemperatureUnit, ExchangeRatesMap } from './types';
 import { playUISound } from './utils/timeUtils';
+import { fetchExchangeRates } from './utils/currencyService';
+import { detectUserLocationAndPreferences } from './utils/locationService';
 
 const STORAGE_CUSTOM_REGIONS = 'chronos_custom_regions';
 const STORAGE_ACTIVE_REGION_IDS = 'chronos_active_region_ids';
+const STORAGE_TEMP_UNIT = 'chronos_temp_unit';
+const STORAGE_HOME_CURRENCY = 'chronos_home_currency';
 
 export function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [mapProjection, setMapProjection] = useState<MapProjection>('flat');
+
+  // App preferences
+  const [is24Hour, setIs24Hour] = useState<boolean>(false);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [referenceRegionId, setReferenceRegionId] = useState<string | null>(null);
+  const [tempUnit, setTempUnit] = useState<TemperatureUnit>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_TEMP_UNIT);
+      if (saved === 'C' || saved === 'F') return saved;
+    } catch (e) {}
+    return 'C';
+  });
+
+  const [homeCurrency, setHomeCurrency] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_HOME_CURRENCY);
+      if (saved) return saved;
+    } catch (e) {}
+    return 'USD';
+  });
+
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRatesMap>({});
+  const [isAutoDetecting, setIsAutoDetecting] = useState<boolean>(false);
+  const [userCountryCode, setUserCountryCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_TEMP_UNIT, tempUnit);
+    } catch (e) {}
+  }, [tempUnit]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_HOME_CURRENCY, homeCurrency);
+    } catch (e) {}
+  }, [homeCurrency]);
+
+  // Fetch exchange rates whenever homeCurrency changes
+  useEffect(() => {
+    let isMounted = true;
+    fetchExchangeRates(homeCurrency).then((rates) => {
+      if (isMounted) setExchangeRates(rates);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [homeCurrency]);
 
   // All known regions (default GLOBAL_REGIONS + custom added locations)
   const [allRegions, setAllRegions] = useState<TimeRegion[]>(() => {
@@ -50,13 +101,60 @@ export function App() {
     return INITIAL_DEFAULT_REGION_IDS;
   });
 
+  // Handler for auto-detecting user location & preferred currency/temp unit
+  const handleAutoDetectLocation = useCallback(async () => {
+    setIsAutoDetecting(true);
+    try {
+      const prefs = await detectUserLocationAndPreferences();
+      if (prefs) {
+        if (prefs.currencyCode) {
+          setHomeCurrency(prefs.currencyCode);
+        }
+        if (prefs.tempUnit) {
+          setTempUnit(prefs.tempUnit);
+        }
+        if (prefs.countryCode) {
+          const code = prefs.countryCode.toUpperCase();
+          setUserCountryCode(code);
+
+          // Find or add matching tile for user's country and position it first
+          const targetRegion =
+            allRegions.find((r) => r.countryCode.toUpperCase() === code) ||
+            GLOBAL_REGIONS.find((r) => r.countryCode.toUpperCase() === code);
+
+          if (targetRegion) {
+            setAllRegions((prev) =>
+              prev.some((r) => r.id === targetRegion.id) ? prev : [targetRegion, ...prev]
+            );
+            setActiveRegionIds((prev) => {
+              const filtered = prev.filter((id) => id !== targetRegion.id);
+              return [targetRegion.id, ...filtered];
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to auto detect location:', e);
+    } finally {
+      setIsAutoDetecting(false);
+    }
+  }, [allRegions]);
+
+  // Auto-detect user location on initial app load if no home currency preference was explicitly saved
+  useEffect(() => {
+    try {
+      const savedCurrency = localStorage.getItem(STORAGE_HOME_CURRENCY);
+      if (!savedCurrency) {
+        handleAutoDetectLocation();
+      }
+    } catch (e) {
+      handleAutoDetectLocation();
+    }
+  }, [handleAutoDetectLocation]);
+
+
   const [pinnedRegionId, setPinnedRegionId] = useState<string | null>(null);
   const [selectedContinent, setSelectedContinent] = useState<Continent>('All');
-
-  // App preferences
-  const [is24Hour, setIs24Hour] = useState<boolean>(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [referenceRegionId, setReferenceRegionId] = useState<string | null>(null);
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -105,11 +203,23 @@ export function App() {
     }
   }, [activeRegionIds]);
 
-  // Memoized active & visible regions
-  const allActiveRegions = useMemo(
-    () => allRegions.filter((r) => activeRegionIds.includes(r.id)),
-    [allRegions, activeRegionIds]
-  );
+  // Memoized active & visible regions (User's location tile placed FIRST)
+  const allActiveRegions = useMemo(() => {
+    const active = allRegions.filter((r) => activeRegionIds.includes(r.id));
+    active.sort((a, b) => activeRegionIds.indexOf(a.id) - activeRegionIds.indexOf(b.id));
+
+    if (!userCountryCode) return active;
+
+    const userTiles = active.filter(
+      (r) => r.countryCode.toUpperCase() === userCountryCode.toUpperCase()
+    );
+    const otherTiles = active.filter(
+      (r) => r.countryCode.toUpperCase() !== userCountryCode.toUpperCase()
+    );
+
+    return [...userTiles, ...otherTiles];
+  }, [allRegions, activeRegionIds, userCountryCode]);
+
 
   const visibleTiles = useMemo(
     () =>
@@ -188,6 +298,10 @@ export function App() {
           onOpenAddModal={() => setIsAddModalOpen(true)}
           currentTime={currentTime}
           pinnedRegionId={pinnedRegionId}
+          selectedCurrency={homeCurrency}
+          onSelectCurrency={setHomeCurrency}
+          onAutoDetectLocation={handleAutoDetectLocation}
+          isAutoDetecting={isAutoDetecting}
         />
       </div>
 
@@ -222,10 +336,14 @@ export function App() {
                   onSelect={handleSelectRegion}
                   onRemove={handleRemoveRegion}
                   currentTime={currentTime}
+                  tempUnit={tempUnit}
+                  baseCurrencyCode={homeCurrency}
+                  rates={exchangeRates}
                 />
               </div>
             ))}
           </div>
+
         </div>
       </div>
 
@@ -255,6 +373,8 @@ export function App() {
           onClose={() => setPinnedRegionId(null)}
           onSetAsReference={setReferenceRegionId}
           currentTime={currentTime}
+          tempUnit={tempUnit}
+          onToggleTempUnit={setTempUnit}
         />
       )}
 

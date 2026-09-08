@@ -36,3 +36,39 @@ export interface AppPreferences {
   showTerminator: boolean;
   referenceRegionId: string | null;
 }
+
+export type TemperatureUnit = 'C' | 'F';
+
+export interface WeatherData {
+  temperatureC: number;
+  temperatureF: number;
+  apparentTemperatureC: number;
+  apparentTemperatureF: number;
+  weatherCode: number;
+  weatherDescription: string;
+  humidity: number;
+  windSpeed: number;
+}
+
+export interface DisasterAlert {
+  id: string;
+  event: string;
+  severity: 'extreme' | 'warning' | 'watch' | 'advisory';
+  headline: string;
+  description?: string;
+  sender?: string;
+  effective?: string;
+  expires?: string;
+}
+
+export interface CurrencyOption {
+  code: string;
+  symbol: string;
+  name: string;
+  flag?: string;
+}
+
+export type ExchangeRatesMap = Record<string, number>;
+
+
+

@@ -11,11 +11,15 @@ import {
   Loader2,
   Globe,
   Map as MapIcon,
+  Coins,
+  ChevronDown,
+  Locate,
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
 import { Continent, TimeRegion, MapProjection } from '../types';
 import { formatTimeInZone, playUISound } from '../utils/timeUtils';
 import { searchGlobalLocations, scoreAndSortMatches } from '../utils/locationService';
+import { MAJOR_CURRENCIES } from '../utils/currencyService';
 
 interface NavbarProps {
   allRegions: TimeRegion[];
@@ -32,7 +36,12 @@ interface NavbarProps {
   onOpenAddModal: () => void;
   currentTime: Date;
   pinnedRegionId: string | null;
+  selectedCurrency: string;
+  onSelectCurrency: (currencyCode: string) => void;
+  onAutoDetectLocation?: () => void;
+  isAutoDetecting?: boolean;
 }
+
 
 export const Navbar: React.FC<NavbarProps> = ({
   allRegions,
@@ -49,14 +58,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAddModal,
   currentTime,
   pinnedRegionId,
+  selectedCurrency,
+  onSelectCurrency,
+  onAutoDetectLocation,
+  isAutoDetecting = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TimeRegion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const currencyDropdownRef = useRef<HTMLDivElement | null>(null);
+
 
   const continents: Continent[] = [
     'All',
@@ -117,6 +133,21 @@ export const Navbar: React.FC<NavbarProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Close currency dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        currencyDropdownRef.current &&
+        !currencyDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsCurrencyOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
 
   return (
     <header className="relative z-30 w-full liquid-glass-header rounded-2xl sm:rounded-3xl shadow-2xl overflow-visible transition-all duration-300">
@@ -285,6 +316,67 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>{is24Hour ? '24H' : '12H'}</span>
           </button>
 
+          {/* Desktop Currency Selector Toggle */}
+          <div className="relative hidden sm:block" ref={currencyDropdownRef}>
+            <button
+              onClick={() => {
+                if (soundEnabled) playUISound('toggle');
+                setIsCurrencyOpen(!isCurrencyOpen);
+              }}
+              title="Select Base Currency for Tile Exchange Rates"
+              className="btn-secondary inline-flex items-center gap-1.5 px-2.5 min-w-[85px]"
+            >
+              <Coins className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+              <span className="font-bold text-gold-300">{selectedCurrency}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+            </button>
+
+            {isCurrencyOpen && (
+              <div className="absolute right-0 top-full mt-2 w-64 glass-panel-gold rounded-2xl p-2 shadow-2xl z-50 border border-gold-500/30 max-h-72 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 flex items-center justify-between">
+                  <span>Home Currency</span>
+                  {onAutoDetectLocation && (
+                    <button
+                      onClick={() => {
+                        if (soundEnabled) playUISound('click');
+                        onAutoDetectLocation();
+                        setIsCurrencyOpen(false);
+                      }}
+                      disabled={isAutoDetecting}
+                      className="text-[10px] text-gold-400 hover:text-gold-300 flex items-center gap-1 normal-case font-medium disabled:opacity-50"
+                    >
+                      <Locate className={`w-3 h-3 text-gold-400 ${isAutoDetecting ? 'animate-spin' : ''}`} />
+                      <span>{isAutoDetecting ? 'Detecting...' : 'Auto-detect'}</span>
+                    </button>
+                  )}
+                </div>
+                <div className="pt-1 space-y-0.5">
+                  {MAJOR_CURRENCIES.map((curr) => (
+                    <button
+                      key={curr.code}
+                      onClick={() => {
+                        if (soundEnabled) playUISound('click');
+                        onSelectCurrency(curr.code);
+                        setIsCurrencyOpen(false);
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors ${
+                        selectedCurrency === curr.code
+                          ? 'bg-gold-500/20 text-gold-300 font-bold border border-gold-500/40'
+                          : 'text-slate-200 hover:bg-white/5 font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono font-bold text-gold-400 w-7 text-center shrink-0">{curr.symbol}</span>
+                        <span className="truncate">{curr.name}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400 shrink-0 font-bold ml-1">{curr.code}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Desktop Sound Toggle */}
           <button
             onClick={() => {
@@ -448,8 +540,52 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Reset Map</span>
             </button>
           </div>
+
+          {/* Mobile Currency Selection */}
+          <div className="pt-2 border-t border-slate-800/80">
+            <div className="flex items-center justify-between text-xs font-sans text-slate-400 mb-1.5">
+              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <Coins className="w-3.5 h-3.5 text-gold-400" /> Base Currency
+              </span>
+              {onAutoDetectLocation && (
+                <button
+                  onClick={() => {
+                    if (soundEnabled) playUISound('click');
+                    onAutoDetectLocation();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  disabled={isAutoDetecting}
+                  className="text-[10px] text-gold-400 hover:text-gold-300 flex items-center gap-1 font-medium"
+                >
+                  <Locate className={`w-3 h-3 ${isAutoDetecting ? 'animate-spin' : ''}`} />
+                  <span>Auto-detect</span>
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-1 bg-navy-900/60 rounded-xl border border-slate-800/90">
+              {MAJOR_CURRENCIES.slice(0, 15).map((curr) => (
+                <button
+                  key={curr.code}
+                  onClick={() => {
+                    if (soundEnabled) playUISound('click');
+                    onSelectCurrency(curr.code);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`px-2 py-1 rounded-lg text-xs font-mono flex items-center justify-between ${
+                    selectedCurrency === curr.code
+                      ? 'bg-gold-500 text-navy-950 font-bold'
+                      : 'bg-navy-950/80 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  <span className="font-bold">{curr.code}</span>
+                  <span className="opacity-80 text-[10px]">{curr.symbol}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
+
 
     </header>
   );
