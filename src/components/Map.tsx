@@ -81,16 +81,16 @@ export const MapComponent: React.FC<MapProps> = ({
       }
     );
 
-    // Country & City Labels Overlay
+    // Country & City Labels Overlay (Clean CartoDB Dark Labels - no duplicate country labels)
     const countryLabels = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
       {
         maxZoom: 18,
         subdomains: 'abcd',
         updateWhenZooming: false,
         updateWhenIdle: true,
         keepBuffer: 16,
-        attribution: '&copy; Esri Boundaries & Places',
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
         className: 'gpu-accelerated',
       }
     );

@@ -119,20 +119,21 @@ export function App() {
           setUserCountryCode(code);
 
           // Find or add matching tile for user's country and position it first
-          const targetRegion =
-            allRegions.find((r) => r.countryCode.toUpperCase() === code) ||
-            GLOBAL_REGIONS.find((r) => r.countryCode.toUpperCase() === code);
+          setAllRegions((prev) => {
+            const targetRegion =
+              prev.find((r) => r.countryCode.toUpperCase() === code) ||
+              GLOBAL_REGIONS.find((r) => r.countryCode.toUpperCase() === code);
 
-          if (targetRegion) {
-            setUserRegionId(targetRegion.id);
-            setAllRegions((prev) =>
-              prev.some((r) => r.id === targetRegion.id) ? prev : [targetRegion, ...prev]
-            );
-            setActiveRegionIds((prev) => {
-              const filtered = prev.filter((id) => id !== targetRegion.id);
-              return [targetRegion.id, ...filtered];
-            });
-          }
+            if (targetRegion) {
+              setUserRegionId(targetRegion.id);
+              setActiveRegionIds((activePrev) => {
+                const filtered = activePrev.filter((id) => id !== targetRegion.id);
+                return [targetRegion.id, ...filtered];
+              });
+              return prev.some((r) => r.id === targetRegion.id) ? prev : [targetRegion, ...prev];
+            }
+            return prev;
+          });
         }
       }
     } catch (e) {
@@ -140,7 +141,7 @@ export function App() {
     } finally {
       setIsAutoDetecting(false);
     }
-  }, [allRegions]);
+  }, []);
 
   // Auto-detect user location on initial app load
   useEffect(() => {
