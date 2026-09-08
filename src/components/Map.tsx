@@ -37,7 +37,7 @@ export const MapComponent: React.FC<MapProps> = ({
 
   // Initialize Map instance with Satellite Night base layer
   useEffect(() => {
-    if (!mapContainerRef.current || mapInstanceRef.current) return;
+    if (mapProjection === 'globe' || !mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
       center: DEFAULT_CENTER,
@@ -104,14 +104,24 @@ export const MapComponent: React.FC<MapProps> = ({
 
     mapInstanceRef.current = map;
 
+    // Direct size invalidation on next animation frame to ensure tile grid renders instantly
+    const raf = requestAnimationFrame(() => {
+      map.invalidateSize({ animate: false });
+    });
+
     return () => {
+      cancelAnimationFrame(raf);
       map.remove();
       mapInstanceRef.current = null;
+      markersRef.current.clear();
+      terminatorLineRef.current = null;
+      terminatorPolygonRef.current = null;
     };
-  }, []);
+  }, [mapProjection]);
 
   // Handle map zoom/pan when pinned region changes or resets with precise visual centering
   useEffect(() => {
+    if (mapProjection === 'globe') return;
     const map = mapInstanceRef.current;
     if (!map) return;
 
@@ -152,7 +162,7 @@ export const MapComponent: React.FC<MapProps> = ({
           const newCenterPoint = L.point(containerPoint.x + shiftX, containerPoint.y + shiftY);
           const newCenterLatLng = map.unproject(newCenterPoint, targetZoom);
 
-          // Fly directly to newCenterLatLng with ultra-fast 120Hz response
+          // Fly directly to newCenterLatLng with ultra-fast response
           map.flyTo(newCenterLatLng, targetZoom, {
             duration: 0.65,
             easeLinearity: 0.1,
@@ -160,7 +170,7 @@ export const MapComponent: React.FC<MapProps> = ({
           });
         }
       } else {
-        // Ultra-smooth 120Hz direct zoom out to default world view
+        // Direct zoom out to default world view
         map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, {
           duration: 0.65,
           easeLinearity: 0.1,
@@ -170,21 +180,22 @@ export const MapComponent: React.FC<MapProps> = ({
     }, 40);
 
     return () => clearTimeout(timer);
-  }, [pinnedRegionId, resetTrigger]);
+  }, [pinnedRegionId, resetTrigger, mapProjection, visibleRegions]);
 
   // Handle window resize to keep Leaflet map container bounds in sync
   useEffect(() => {
     const handleResize = () => {
-      if (mapInstanceRef.current) {
+      if (mapInstanceRef.current && mapProjection === 'flat') {
         mapInstanceRef.current.invalidateSize();
       }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [mapProjection]);
 
   // Live real-time solar day/night terminator curve overlay
   useEffect(() => {
+    if (mapProjection === 'globe') return;
     const map = mapInstanceRef.current;
     if (!map) return;
 
@@ -224,10 +235,11 @@ export const MapComponent: React.FC<MapProps> = ({
     } catch (err) {
       console.error('Terminator render error:', err);
     }
-  }, [currentTime]);
+  }, [currentTime, mapProjection]);
 
   // Render dynamic Leaflet HTML Markers for each visible region
   useEffect(() => {
+    if (mapProjection === 'globe') return;
     const map = mapInstanceRef.current;
     if (!map) return;
 
@@ -328,7 +340,7 @@ export const MapComponent: React.FC<MapProps> = ({
         currentMarkers.set(region.id, marker);
       }
     });
-  }, [visibleRegions, pinnedRegionId, currentTime, is24Hour]);
+  }, [visibleRegions, pinnedRegionId, currentTime, is24Hour, mapProjection]);
 
   if (mapProjection === 'globe') {
     return (
