@@ -143,19 +143,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Desktop UTC Clock Badge (Hidden on small mobile screens to prevent overflow) */}
           <div className="hidden sm:flex items-center gap-3 pl-3.5 border-l border-slate-700/60 font-sans tabular-nums text-xs shrink-0 select-none">
-            <div className="flex flex-col">
+            <div className="flex flex-col w-[95px] sm:w-[105px] shrink-0">
               <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 font-semibold">UTC</span>
-              <span className="text-gold-400 font-bold text-xs sm:text-sm tracking-wider inline-block min-w-[78px] sm:min-w-[88px] text-left">{utcTimeStr}</span>
+              <span className="text-gold-400 font-bold text-xs sm:text-sm tracking-wider truncate text-left">{utcTimeStr}</span>
             </div>
-            <div className="hidden md:flex flex-col pl-3.5 border-l border-slate-800">
+            <div className="hidden md:flex flex-col pl-3.5 border-l border-slate-800 w-[125px] sm:w-[135px] shrink-0">
               <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Your Time</span>
-              <span className="text-slate-200 font-bold tracking-wider inline-block min-w-[98px] sm:min-w-[108px] text-left">{localTimeStr}</span>
+              <span className="text-slate-200 font-bold tracking-wider truncate text-left">{localTimeStr}</span>
             </div>
           </div>
         </div>
 
         {/* Center: Desktop Search Input */}
-        <div className="hidden md:block relative w-80 shrink">
+        <div className="hidden md:block relative w-80 shrink-0">
           <div className="relative flex items-center">
             <Search className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
@@ -244,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onOpenAddModal();
             }}
             title="Add region to dashboard"
-            className="btn-primary min-w-[36px] min-h-[36px] p-2 sm:px-4 sm:py-2"
+            className="btn-primary min-w-[36px] min-h-[36px] p-2 sm:px-4 sm:py-2 shrink-0"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span className="hidden sm:inline">Add Location</span>
@@ -257,16 +257,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggleProjection();
             }}
             title="Switch between Flat Map & 3D Globe Projection"
-            className="btn-secondary hidden sm:inline-flex font-sans font-semibold"
+            className="btn-secondary hidden sm:inline-flex font-sans font-semibold w-[105px] shrink-0 justify-center"
           >
             {mapProjection === 'globe' ? (
               <>
-                <Globe className="w-3.5 h-3.5 text-gold-400" />
+                <Globe className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                 <span>3D Globe</span>
               </>
             ) : (
               <>
-                <MapIcon className="w-3.5 h-3.5 text-gold-400" />
+                <MapIcon className="w-3.5 h-3.5 text-gold-400 shrink-0" />
                 <span>Flat Map</span>
               </>
             )}
@@ -279,9 +279,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggle24Hour();
             }}
             title="Toggle 12h / 24h format"
-            className="btn-secondary hidden md:inline-flex font-sans font-semibold tabular-nums"
+            className="btn-secondary hidden md:inline-flex font-sans font-semibold tabular-nums w-[68px] shrink-0 justify-center"
           >
-            <Clock className="w-3.5 h-3.5 text-gold-400" />
+            <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
             <span>{is24Hour ? '24H' : '12H'}</span>
           </button>
 
