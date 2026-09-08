@@ -76,7 +76,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             <div>
               <h2 className="text-lg md:text-xl font-serif font-extrabold tracking-wider text-slate-100 flex items-center gap-2">
                 <span>{region.city}</span>
-                <span className="badge-gold font-mono font-semibold">
+                <span className="badge-gold font-sans font-bold">
                   {utcOffset}
                 </span>
               </h2>
@@ -103,7 +103,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             <span>Local Standard Time</span>
           </div>
 
-          <div className="font-mono text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-baseline justify-center gap-1 my-1">
+          <div className="font-sans tabular-nums text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-baseline justify-center gap-1 my-1">
             <span>{formattedTime.hoursMinutes}</span>
             <span className="text-base md:text-lg font-bold text-gold-400">:{formattedTime.seconds}</span>
             {!is24Hour && <span className="text-xs md:text-sm font-bold text-gold-400/90 ml-1 uppercase">{formattedTime.amPm}</span>}
@@ -113,7 +113,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             {formattedTime.dateStr}
           </div>
 
-          <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-navy-900/90 text-xs font-mono border border-slate-700/60">
+          <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-navy-900/90 text-xs font-sans tabular-nums border border-slate-700/60 font-semibold">
             <span className="text-slate-400">Offset:</span>
             <span
               className={`font-bold ${
@@ -138,7 +138,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 {solar.isDaytime ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
                 Daylight Cycle
               </span>
-              <span className="font-mono text-[11px] text-gold-400 font-bold">{solar.dayLength} daylight</span>
+              <span className="font-sans tabular-nums text-[11px] text-gold-400 font-bold">{solar.dayLength} daylight</span>
             </div>
 
             {/* Solar Progress Track */}
@@ -152,11 +152,11 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             <div className="flex items-center justify-between text-[11px] font-sans text-slate-300 font-medium">
               <div className="flex items-center gap-1.5">
                 <Sunrise className="w-3.5 h-3.5 text-amber-400" />
-                <span>Sunrise <strong className="font-mono font-bold text-slate-200">{solar.sunrise}</strong></span>
+                <span>Sunrise <strong className="font-sans tabular-nums font-bold text-slate-200">{solar.sunrise}</strong></span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Sunset className="w-3.5 h-3.5 text-rose-400" />
-                <span>Sunset <strong className="font-mono font-bold text-slate-200">{solar.sunset}</strong></span>
+                <span>Sunset <strong className="font-sans tabular-nums font-bold text-slate-200">{solar.sunset}</strong></span>
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 <Compass className="w-3.5 h-3.5 text-gold-400" />
                 Coordinates
               </div>
-              <div className="font-mono text-[11px] text-slate-200 font-bold">
+              <div className="font-sans tabular-nums text-[11px] text-slate-200 font-bold">
                 {region.lat.toFixed(2)}&deg;, {region.lng.toFixed(2)}&deg;
               </div>
             </div>
@@ -194,7 +194,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 <Calendar className="w-3.5 h-3.5 text-gold-400" />
                 Timezone ID
               </div>
-              <div className="font-mono text-[10px] text-slate-300 truncate font-semibold">{region.timezone}</div>
+              <div className="font-sans text-[10px] text-slate-300 truncate font-semibold">{region.timezone}</div>
             </div>
           </div>
 

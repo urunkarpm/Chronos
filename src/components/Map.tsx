@@ -275,7 +275,7 @@ export const MapComponent: React.FC<MapProps> = ({
           if (prevPinned !== isPinned) {
             (existingMarker as any)._isPinned = isPinned;
             if (badgeEl) {
-              badgeEl.className = `marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium backdrop-blur-md border ${
+              badgeEl.className = `marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans tabular-nums font-semibold backdrop-blur-md border ${
                 isPinned
                   ? 'bg-navy-900/95 text-gold-400 border-gold-500 shadow-md'
                   : 'bg-navy-950/85 text-slate-200 border-white/10 group-hover:border-gold-400/60 shadow-md'
@@ -298,7 +298,7 @@ export const MapComponent: React.FC<MapProps> = ({
       const htmlContent = `
         <div class="group cursor-pointer relative flex flex-col items-center select-none" data-region-id="${region.id}">
           <!-- Marker Badge -->
-          <div class="marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium backdrop-blur-md border ${
+          <div class="marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans tabular-nums font-semibold backdrop-blur-md border ${
             isPinned
               ? 'bg-navy-900/95 text-gold-400 border-gold-500 shadow-md'
               : 'bg-navy-950/85 text-slate-200 border-white/10 group-hover:border-gold-400/60 shadow-md'

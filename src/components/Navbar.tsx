@@ -142,14 +142,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop UTC Clock Badge (Hidden on small mobile screens to prevent overflow) */}
-          <div className="hidden sm:flex items-center gap-3 pl-3.5 border-l border-slate-700/60 font-mono text-xs shrink-0">
+          <div className="hidden sm:flex items-center gap-3 pl-3.5 border-l border-slate-700/60 font-sans tabular-nums text-xs shrink-0">
             <div className="flex flex-col">
-              <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400">UTC</span>
+              <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 font-semibold">UTC</span>
               <span className="text-gold-400 font-bold text-xs sm:text-sm tracking-wider">{utcTimeStr}</span>
             </div>
             <div className="hidden md:flex flex-col pl-3.5 border-l border-slate-800">
-              <span className="text-[9px] uppercase tracking-wider text-slate-400">Your Time</span>
-              <span className="text-slate-200 font-medium tracking-wider">{localTimeStr}</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Your Time</span>
+              <span className="text-slate-200 font-bold tracking-wider">{localTimeStr}</span>
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
-              className="input-standard pl-10 pr-9"
+              className="input-standard pl-10 pr-9 font-sans"
             />
             {isSearching ? (
               <Loader2 className="absolute right-3 w-4 h-4 text-gold-400 animate-spin" />
@@ -213,7 +213,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </div>
                       </div>
                     </div>
-                    <div className="text-right font-mono shrink-0 pl-2">
+                    <div className="text-right font-sans tabular-nums shrink-0 pl-2">
                       <div className="text-xs font-bold text-gold-400">
                         {formatTimeInZone(reg.timezone, currentTime, is24Hour).hoursMinutes}
                       </div>
@@ -222,12 +222,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 ))
               ) : isSearching ? (
-                <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2 font-mono">
+                <div className="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2 font-sans">
                   <Loader2 className="w-4 h-4 text-gold-400 animate-spin" />
                   <span>Searching global locations...</span>
                 </div>
               ) : (
-                <div className="p-4 text-center text-xs text-slate-400 font-mono">
+                <div className="p-4 text-center text-xs text-slate-400 font-sans">
                   No matching locations found for &quot;{searchQuery}&quot;
                 </div>
               )}
@@ -257,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggleProjection();
             }}
             title="Switch between Flat Map & 3D Globe Projection"
-            className="btn-secondary hidden sm:inline-flex font-mono"
+            className="btn-secondary hidden sm:inline-flex font-sans font-semibold"
           >
             {mapProjection === 'globe' ? (
               <>
@@ -279,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggle24Hour();
             }}
             title="Toggle 12h / 24h format"
-            className="btn-secondary hidden md:inline-flex font-mono"
+            className="btn-secondary hidden md:inline-flex font-sans font-semibold tabular-nums"
           >
             <Clock className="w-3.5 h-3.5 text-gold-400" />
             <span>{is24Hour ? '24H' : '12H'}</span>

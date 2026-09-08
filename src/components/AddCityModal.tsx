@@ -156,7 +156,7 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
                   </div>
 
                   <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right font-mono">
+                    <div className="text-right font-sans tabular-nums">
                       <div className="text-xs font-bold text-gold-400">{timeFormatted.hoursMinutes}</div>
                       <div className="text-[10px] text-slate-400">{reg.timezone}</div>
                     </div>
@@ -186,12 +186,12 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
               );
             })
           ) : isSearching ? (
-            <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2 font-mono">
+            <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2 font-sans">
               <Loader2 className="w-5 h-5 text-gold-400 animate-spin" />
               <span>Searching locations worldwide...</span>
             </div>
           ) : (
-            <div className="p-8 text-center text-xs text-slate-400 font-mono">
+            <div className="p-8 text-center text-xs text-slate-400 font-sans">
               No matching locations found for &quot;{query}&quot;
             </div>
           )}

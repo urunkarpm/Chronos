@@ -22,9 +22,10 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Outfit', 'Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
-        serif: ['Cinzel', 'serif']
+        sans: ['"Plus Jakarta Sans"', 'Outfit', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        serif: ['Cinzel', 'serif'],
+        mono: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       boxShadow: {
         'gold-glow': 'none',

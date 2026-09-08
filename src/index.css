@@ -21,8 +21,15 @@
   }
 
   body {
-    @apply bg-navy-950 text-slate-100 antialiased selection:bg-gold-500 selection:text-navy-950;
+    @apply bg-navy-950 text-slate-100 antialiased selection:bg-gold-500 selection:text-navy-950 font-sans;
+    font-feature-settings: 'tnum' 1, 'lnum' 1, 'cv05' 1, 'cv08' 1;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
 
 /* Hide scrollbars globally across all browsers while retaining scroll functionality */
@@ -144,19 +151,19 @@
 
   /* Badges & Chips */
   .badge-gold {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-semibold rounded-full bg-gold-500/10 text-gold-400 border border-gold-500/30;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-sans tabular-nums font-semibold rounded-full bg-gold-500/10 text-gold-400 border border-gold-500/30;
   }
 
   .badge-slate {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-medium rounded-full bg-navy-950/80 text-slate-300 border border-slate-700/60;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-sans tabular-nums font-medium rounded-full bg-navy-950/80 text-slate-300 border border-slate-700/60;
   }
 
   .badge-emerald {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-semibold rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/35;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-sans tabular-nums font-semibold rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/35;
   }
 
   .badge-amber {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-semibold rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/35;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-sans tabular-nums font-semibold rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/35;
   }
 
   /* Filter Tabs */

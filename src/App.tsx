@@ -201,7 +201,7 @@ export function App() {
       >
         <div className="max-w-7xl mx-auto">
           {/* Mobile Swipe Cue Banner */}
-          <div className="sm:hidden flex items-center justify-between text-[11px] font-mono text-slate-400 px-1 mb-1 font-medium">
+          <div className="sm:hidden flex items-center justify-between text-[11px] font-sans text-slate-400 px-1 mb-1 font-medium">
             <span>Swipe cities horizontally &rarr;</span>
             <span className="badge-gold text-[9px] py-0.5">{visibleTiles.length} Active</span>
           </div>

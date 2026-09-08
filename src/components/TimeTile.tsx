@@ -73,7 +73,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         </div>
 
         {/* Main Time Readout */}
-        <div className="flex items-baseline justify-between font-mono my-0.5">
+        <div className="flex items-baseline justify-between font-sans tabular-nums my-0.5">
           <div className="flex items-baseline gap-1">
             <span className="text-xl font-bold tracking-tight text-white group-hover:text-gold-300 transition-colors leading-none">
               {formattedTime.hoursMinutes}
@@ -103,7 +103,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         </div>
 
         {/* Bottom Row: UTC Offset & Relative Time */}
-        <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[9px] font-mono">
+        <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[9px] font-sans tabular-nums">
           <span className="badge-gold text-[9px] py-0 px-1.5">
             {utcOffsetStr}
           </span>
@@ -156,7 +156,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
 
         {/* Main Time Display */}
         <div className="my-3 flex items-baseline justify-between">
-          <div className="flex items-baseline gap-1 font-mono">
+          <div className="flex items-baseline gap-1 font-sans tabular-nums">
             <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white group-hover:text-gold-300 transition-colors">
               {formattedTime.hoursMinutes}
             </span>
@@ -185,10 +185,10 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         </div>
 
         {/* Bottom Info Row: Date & Relative Offset */}
-        <div className="pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
-          <span className="font-mono text-[10px] text-slate-400 font-medium">{formattedTime.shortDateStr}</span>
+        <div className="pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-sans tabular-nums">
+          <span className="text-[10px] text-slate-400 font-semibold">{formattedTime.shortDateStr}</span>
 
-          <div className="flex items-center gap-1 font-mono text-[10px]">
+          <div className="flex items-center gap-1 text-[10px]">
             <span
               className={`font-semibold ${
                 relativeDiff.isSame
