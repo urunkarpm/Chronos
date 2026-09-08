@@ -159,7 +159,7 @@ export const MapComponent: React.FC<MapProps> = ({
           null;
 
         if (targetRegion) {
-          targetZoom = isMobile ? 4.5 : 4.5;
+          targetZoom = isMobile ? 3.2 : 4.0;
           navHeight = isMobile ? 88 : 60;
           bottomDrawerHeight = isMobile ? 85 : 120;
           rightDrawerWidth = 0;
