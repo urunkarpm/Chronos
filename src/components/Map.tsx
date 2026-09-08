@@ -97,6 +97,13 @@ export const MapComponent: React.FC<MapProps> = ({
 
     L.layerGroup([satImagery, countryLabels]).addTo(map);
 
+    // Create custom map pane for Day/Night solar overlay (above base tiles, below markers)
+    if (!map.getPane('terminatorPane')) {
+      const terminatorPane = map.createPane('terminatorPane');
+      terminatorPane.style.zIndex = '425';
+      terminatorPane.style.pointerEvents = 'none';
+    }
+
     // Click on map background resets pinned state
     map.on('click', (e) => {
       const originalEv = e.originalEvent;
@@ -236,7 +243,7 @@ export const MapComponent: React.FC<MapProps> = ({
           fillOpacity: 0.55,
           stroke: false,
           interactive: false,
-          className: 'pointer-events-none z-10',
+          pane: map.getPane('terminatorPane') ? 'terminatorPane' : 'overlayPane',
         });
         polygon.addTo(map);
         terminatorPolygonRef.current = polygon;
@@ -252,7 +259,7 @@ export const MapComponent: React.FC<MapProps> = ({
           opacity: 0.95,
           dashArray: '8, 6',
           interactive: false,
-          className: 'pointer-events-none z-20',
+          pane: map.getPane('terminatorPane') ? 'terminatorPane' : 'overlayPane',
         });
         polyline.addTo(map);
         terminatorLineRef.current = polyline;

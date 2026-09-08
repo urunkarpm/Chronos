@@ -270,7 +270,8 @@ export function calculateTerminatorLine(date: Date = new Date()): {
 
   const lineCoords: [number, number][] = [];
 
-  for (let lng = -180; lng <= 180; lng += 1) {
+  // Extended longitude range from -360° to +360° for seamless tile coverage on mobile & desktop
+  for (let lng = -360; lng <= 360; lng += 2) {
     const diffRad = ((lng - subsolarLngDeg) * Math.PI) / 180;
     const tanLat = -Math.cos(diffRad) / tanDeclination;
     let lat = (Math.atan(tanLat) * 180) / Math.PI;
@@ -279,13 +280,13 @@ export function calculateTerminatorLine(date: Date = new Date()): {
     lineCoords.push([lat, lng]);
   }
 
-  // Build a valid night hemisphere polygon
+  // Build a valid night hemisphere polygon across extended longitude bounds
   const isNorthernSummer = declinationRad >= 0;
   const polarLat = isNorthernSummer ? -85 : 85;
   const nightPolygon: [number, number][] = [
     ...lineCoords,
-    [polarLat, 180],
-    [polarLat, -180],
+    [polarLat, 360],
+    [polarLat, -360],
   ];
 
   return { line: lineCoords, nightPolygon };
