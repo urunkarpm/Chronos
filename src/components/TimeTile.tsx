@@ -63,32 +63,32 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
           setIsRateFlipped(!isRateFlipped);
         }}
         title="Click to flip currency conversion mode"
-        className={`group/rate inline-flex items-center gap-1 font-semibold tabular-nums rounded-full transition-all duration-200 cursor-pointer active:scale-95 border select-none ${
+        className={`group/rate inline-flex items-center gap-1 font-extrabold tabular-nums rounded-full transition-all duration-200 cursor-pointer active:scale-95 border select-none ${
           isMobile ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'
         } ${
           isRateFlipped
-            ? 'bg-gold-500/15 text-gold-300 border-gold-500/40 hover:bg-gold-500/25'
-            : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+            ? 'bg-gold-500/15 text-gold-300 border-gold-500/40 shadow-xs'
+            : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-xs'
         }`}
       >
         {isRateFlipped ? (
           <>
-            <span className="font-bold">100</span>
+            <span className="font-extrabold">100</span>
             <FlagIcon countryCode={rateDetails.homeCountryCode} className="w-3.5 h-2.5 rounded-2xs shrink-0 shadow-2xs" />
             <span>=</span>
-            <span className="font-bold">{rateDetails.flippedRateStr}</span>
+            <span className="font-extrabold">{rateDetails.flippedRateStr}</span>
             <FlagIcon countryCode={rateDetails.tileCountryCode} className="w-3.5 h-2.5 rounded-2xs shrink-0 shadow-2xs" />
           </>
         ) : (
           <>
-            <span className="font-bold">1</span>
+            <span className="font-extrabold">1</span>
             <FlagIcon countryCode={rateDetails.tileCountryCode} className="w-3.5 h-2.5 rounded-2xs shrink-0 shadow-2xs" />
             <span>=</span>
-            <span className="font-bold">{rateDetails.normalRateStr}</span>
+            <span className="font-extrabold">{rateDetails.normalRateStr}</span>
             <FlagIcon countryCode={rateDetails.homeCountryCode} className="w-3.5 h-2.5 rounded-2xs shrink-0 shadow-2xs" />
           </>
         )}
-        <RefreshCw className="w-2.5 h-2.5 opacity-60 group-hover/rate:rotate-180 transition-transform duration-300 ml-0.5 shrink-0" />
+        <RefreshCw className="w-2.5 h-2.5 opacity-80 group-hover/rate:rotate-180 transition-transform duration-300 ml-0.5 shrink-0" />
       </button>
     );
   };
@@ -101,8 +101,8 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
       }}
       className={`group relative p-2.5 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] ${
         isPinned
-          ? 'border-2 border-gold-500 bg-navy-900/90 scale-[1.01]'
-          : 'hover:border-gold-500/50'
+          ? 'border-2 border-gold-500 scale-[1.01] shadow-2xl'
+          : 'hover:border-gold-500/60'
       }`}
     >
       {/* Mobile-Optimized Card Layout (< sm) */}
@@ -111,7 +111,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
             <FlagIcon countryCode={region.countryCode} alt={region.country} className="w-4.5 h-3 rounded-xs shadow-xs shrink-0" />
-            <h3 className="font-semibold text-xs text-slate-100 group-hover:text-gold-400 transition-colors truncate leading-tight">
+            <h3 className="font-bold text-xs text-slate-100 group-hover:text-gold-400 transition-colors truncate leading-tight">
               {region.city}
             </h3>
           </div>
@@ -122,7 +122,8 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
               if (soundEnabled) playUISound('click');
               onRemove(region.id);
             }}
-            title="Remove tile from view"
+            title={`Remove ${region.city} from view`}
+            aria-label={`Remove ${region.city} from view`}
             className="btn-close min-w-[24px] min-h-[24px] p-0.5 text-slate-400 hover:text-rose-400 -mr-1"
           >
             <X className="w-3.5 h-3.5" />
@@ -144,11 +145,11 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
 
           {/* Inline UTC Offset & Temperature Indicator */}
           <div className="flex items-center gap-1">
-            <span className="inline-flex items-center justify-center text-[9px] font-bold text-gold-400 font-sans tabular-nums bg-gold-500/10 px-1.5 py-0.5 rounded-full border border-gold-500/30 leading-none">
+            <span className="inline-flex items-center justify-center text-[9px] font-bold text-gold-400 font-sans tabular-nums bg-gold-500/10 px-1.5 py-0.5 rounded-full border border-gold-500/30 leading-none shadow-xs">
               {utcOffsetStr}
             </span>
             {weather && (
-              <span className="inline-flex items-center justify-center text-[9px] font-bold text-amber-300 font-sans tabular-nums bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/30 leading-none">
+              <span className="inline-flex items-center justify-center text-[9px] font-bold text-amber-300 font-sans tabular-nums bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/30 leading-none shadow-xs">
                 {tempUnit === 'C' ? `${weather.temperatureC}°C` : `${weather.temperatureF}°F`}
               </span>
             )}
@@ -157,7 +158,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
 
         {/* Bottom Row: Date & Interactive Dual-Flag Exchange Rate Badge */}
         <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[9px] font-sans tabular-nums">
-          <span className="text-[9px] text-slate-400 font-semibold">{formattedTime.shortDateStr}</span>
+          <span className="text-[9px] text-slate-400 font-bold">{formattedTime.shortDateStr}</span>
           {!rateDetails.isSameCurrency && renderRateBadge(true)}
         </div>
 
@@ -170,10 +171,10 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
           <div className="flex items-center gap-2.5 overflow-hidden">
             <FlagIcon countryCode={region.countryCode} alt={region.country} className="w-6 h-4 rounded-xs shadow-xs transition-transform group-hover:scale-110 duration-300 shrink-0" />
             <div className="truncate">
-              <h3 className="font-semibold text-sm text-slate-100 group-hover:text-gold-400 transition-colors truncate leading-snug">
+              <h3 className="font-bold text-sm text-slate-100 group-hover:text-gold-400 transition-colors truncate leading-snug">
                 {region.city}
               </h3>
-              <p className="text-[11px] text-slate-400 truncate mt-0.5">{region.country}</p>
+              <p className="text-[11px] text-slate-400 font-semibold truncate mt-0.5">{region.country}</p>
             </div>
           </div>
 
@@ -183,7 +184,8 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
               if (soundEnabled) playUISound('click');
               onRemove(region.id);
             }}
-            title="Remove tile from view"
+            title={`Remove ${region.city} from view`}
+            aria-label={`Remove ${region.city} from view`}
             className="btn-close min-w-[32px] min-h-[32px] p-1 text-slate-400 hover:text-rose-400 opacity-0 group-hover:opacity-100 shrink-0"
           >
             <X className="w-3.5 h-3.5" />
@@ -205,11 +207,11 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
 
           {/* UTC Offset Badge Inline with Temperature Indicator */}
           <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center justify-center text-[10px] font-bold text-gold-400 font-sans tabular-nums bg-gold-500/10 px-2 py-0.5 rounded-full border border-gold-500/30 leading-none">
+            <span className="inline-flex items-center justify-center text-[10px] font-bold text-gold-400 font-sans tabular-nums bg-gold-500/10 px-2 py-0.5 rounded-full border border-gold-500/30 leading-none shadow-xs">
               {utcOffsetStr}
             </span>
             {weather && (
-              <span className="inline-flex items-center justify-center text-[10px] font-bold text-amber-300 font-sans tabular-nums bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 leading-none">
+              <span className="inline-flex items-center justify-center text-[10px] font-bold text-amber-300 font-sans tabular-nums bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 leading-none shadow-xs">
                 {tempUnit === 'C' ? `${weather.temperatureC}°C` : `${weather.temperatureF}°F`}
               </span>
             )}
@@ -218,7 +220,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
 
         {/* Bottom Info Row: Date & Interactive Dual-Flag Exchange Rate Badge */}
         <div className="pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-sans tabular-nums">
-          <span className="text-[10px] text-slate-400 font-semibold">{formattedTime.shortDateStr}</span>
+          <span className="text-[10px] text-slate-400 font-bold">{formattedTime.shortDateStr}</span>
           {!rateDetails.isSameCurrency && renderRateBadge(false)}
         </div>
 

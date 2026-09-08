@@ -6,7 +6,7 @@ import { TimeTile } from './components/TimeTile';
 import { PinnedDrawer } from './components/PinnedDrawer';
 import { AddCityModal } from './components/AddCityModal';
 import { GLOBAL_REGIONS, INITIAL_DEFAULT_REGION_IDS } from './data/timezones';
-import { TimeRegion, Continent, MapProjection, TemperatureUnit, ExchangeRatesMap } from './types';
+import { TimeRegion, Continent, MapProjection, TemperatureUnit, ExchangeRatesMap, ThemeMode } from './types';
 import { playUISound } from './utils/timeUtils';
 import { fetchExchangeRates } from './utils/currencyService';
 import { detectUserLocationAndPreferences } from './utils/locationService';
@@ -56,6 +56,13 @@ export function App() {
       localStorage.setItem(STORAGE_HOME_CURRENCY, homeCurrency);
     } catch (e) {}
   }, [homeCurrency]);
+
+  // Enforce dark mode permanently
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('dark');
+    root.classList.remove('light');
+  }, []);
 
   // Fetch exchange rates whenever homeCurrency changes
   useEffect(() => {
@@ -263,7 +270,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full h-[100dvh] bg-navy-950 overflow-hidden text-slate-100 font-sans overscroll-none select-none">
+    <div className="fixed inset-0 w-full h-full h-[100dvh] bg-navy-950 text-slate-100 font-sans overscroll-none select-none transition-colors duration-300">
       {/* 100% Viewport Interactive Satellite Map Layer */}
       <div className="absolute inset-0 w-full h-full z-0">
         <Map

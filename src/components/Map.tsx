@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, memo } from 'react';
 import L from 'leaflet';
-import { TimeRegion, MapProjection } from '../types';
+import { TimeRegion, MapProjection, ThemeMode } from '../types';
 import { formatTimeInZone, calculateTerminatorLine } from '../utils/timeUtils';
 import { Globe } from './Globe';
 
@@ -31,6 +31,8 @@ export const MapComponent: React.FC<MapProps> = ({
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const baseLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const markersRef = useRef<globalThis.Map<string, L.Marker>>(new globalThis.Map());
   const terminatorLineRef = useRef<L.Polyline | null>(null);
   const terminatorPolygonRef = useRef<L.Polygon | null>(null);
@@ -67,7 +69,7 @@ export const MapComponent: React.FC<MapProps> = ({
       bounceAtZoomLimits: false,
     });
 
-    // Satellite Imagery Base Layer
+    // Satellite Imagery Base Layer (Dark satellite earth backdrop for both themes)
     const satImagery = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
@@ -81,7 +83,7 @@ export const MapComponent: React.FC<MapProps> = ({
       }
     );
 
-    // Country & City Labels Overlay (Clean CartoDB Dark Labels - no duplicate country labels)
+    // Country & City Labels Overlay
     const countryLabels = L.tileLayer(
       'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
       {
@@ -95,6 +97,8 @@ export const MapComponent: React.FC<MapProps> = ({
       }
     );
 
+    baseLayerRef.current = satImagery;
+    labelsLayerRef.current = countryLabels;
     L.layerGroup([satImagery, countryLabels]).addTo(map);
 
     // Create custom map pane for Day/Night solar overlay (above base tiles, below markers)
@@ -124,6 +128,8 @@ export const MapComponent: React.FC<MapProps> = ({
       cancelAnimationFrame(raf);
       map.remove();
       mapInstanceRef.current = null;
+      baseLayerRef.current = null;
+      labelsLayerRef.current = null;
       markersRef.current.clear();
       terminatorLineRef.current = null;
       terminatorPolygonRef.current = null;
@@ -233,14 +239,19 @@ export const MapComponent: React.FC<MapProps> = ({
 
     try {
       const { line, nightPolygon } = calculateTerminatorLine(currentTime);
+      const isDark = document.documentElement.classList.contains('dark');
 
       // 1. Update/Add Night Shadow Polygon
       if (terminatorPolygonRef.current) {
         terminatorPolygonRef.current.setLatLngs(nightPolygon);
+        terminatorPolygonRef.current.setStyle({
+          fillColor: isDark ? '#020617' : '#0f172a',
+          fillOpacity: isDark ? 0.55 : 0.22,
+        });
       } else {
         const polygon = L.polygon(nightPolygon, {
-          fillColor: '#020617',
-          fillOpacity: 0.55,
+          fillColor: isDark ? '#020617' : '#0f172a',
+          fillOpacity: isDark ? 0.55 : 0.22,
           stroke: false,
           interactive: false,
           pane: map.getPane('terminatorPane') ? 'terminatorPane' : 'overlayPane',
@@ -252,9 +263,12 @@ export const MapComponent: React.FC<MapProps> = ({
       // 2. Update/Add Glowing Gold Solar Terminator Line
       if (terminatorLineRef.current) {
         terminatorLineRef.current.setLatLngs(line);
+        terminatorLineRef.current.setStyle({
+          color: isDark ? '#F3E5AB' : '#d97706',
+        });
       } else {
         const polyline = L.polyline(line, {
-          color: '#F3E5AB',
+          color: isDark ? '#F3E5AB' : '#d97706',
           weight: 3,
           opacity: 0.95,
           dashArray: '8, 6',
@@ -275,6 +289,7 @@ export const MapComponent: React.FC<MapProps> = ({
     const map = mapInstanceRef.current;
     if (!map) return;
 
+    const isDark = document.documentElement.classList.contains('dark');
     const currentMarkers = markersRef.current;
     const activeIds = new Set(visibleRegions.map((r) => r.id));
 
@@ -291,11 +306,22 @@ export const MapComponent: React.FC<MapProps> = ({
       const isPinned = region.id === pinnedRegionId;
       const formattedTime = formatTimeInZone(region.timezone, currentTime, is24Hour);
 
+      const badgeBgClass = isPinned
+        ? 'bg-navy-900/95 text-gold-400 border-gold-500 shadow-md'
+        : 'bg-navy-950/85 text-slate-200 border-white/10 group-hover:border-gold-400/60 shadow-md';
+
+      const cityTextClass = isPinned ? 'text-gold-400 font-bold' : 'text-slate-100 font-semibold';
+      const timeTextClass = 'text-gold-400 font-bold';
+      const pinTipClass = isPinned
+        ? 'bg-navy-900 border-gold-500'
+        : 'bg-navy-950 border-white/10 group-hover:border-gold-400/60';
+
       if (currentMarkers.has(region.id)) {
         const existingMarker = currentMarkers.get(region.id)!;
         const markerEl = existingMarker.getElement();
         const timeValEl = markerEl?.querySelector('.marker-time-val');
         const badgeEl = markerEl?.querySelector('.marker-badge');
+        const cityEl = markerEl?.querySelector('.marker-city-val');
         const pulseEl = markerEl?.querySelector('.marker-pulse');
         const pinTipEl = markerEl?.querySelector('.marker-tip');
 
@@ -307,19 +333,19 @@ export const MapComponent: React.FC<MapProps> = ({
           if (prevPinned !== isPinned) {
             (existingMarker as any)._isPinned = isPinned;
             if (badgeEl) {
-              badgeEl.className = `marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans tabular-nums font-semibold backdrop-blur-md border ${
-                isPinned
-                  ? 'bg-navy-900/95 text-gold-400 border-gold-500 shadow-md'
-                  : 'bg-navy-950/85 text-slate-200 border-white/10 group-hover:border-gold-400/60 shadow-md'
-              }`;
+              badgeEl.className = `marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans tabular-nums font-semibold backdrop-blur-md border ${badgeBgClass}`;
+            }
+            if (cityEl) {
+              cityEl.className = `font-sans font-semibold tracking-wide marker-city-val ${cityTextClass}`;
+            }
+            if (timeValEl) {
+              timeValEl.className = `text-[11px] font-bold ml-1 marker-time-val ${timeTextClass}`;
             }
             if (pulseEl) {
               pulseEl.className = 'hidden';
             }
             if (pinTipEl) {
-              pinTipEl.className = `marker-tip w-2 h-2 rotate-45 -mt-1 border-r border-b ${
-                isPinned ? 'bg-navy-900 border-gold-500' : 'bg-navy-950 border-white/10 group-hover:border-gold-400/60'
-              }`;
+              pinTipEl.className = `marker-tip w-2 h-2 rotate-45 -mt-1 border-r border-b ${pinTipClass}`;
             }
           }
           existingMarker.setLatLng([region.lat, region.lng]);
@@ -330,22 +356,14 @@ export const MapComponent: React.FC<MapProps> = ({
       const htmlContent = `
         <div class="group cursor-pointer relative flex flex-col items-center select-none" data-region-id="${region.id}">
           <!-- Marker Badge -->
-          <div class="marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans tabular-nums font-semibold backdrop-blur-md border ${
-            isPinned
-              ? 'bg-navy-900/95 text-gold-400 border-gold-500 shadow-md'
-              : 'bg-navy-950/85 text-slate-200 border-white/10 group-hover:border-gold-400/60 shadow-md'
-          }">
+          <div class="marker-badge relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans tabular-nums font-semibold backdrop-blur-md border ${badgeBgClass}">
             <img src="https://flagcdn.com/w40/${region.countryCode.toLowerCase()}.png" class="w-4 h-3 rounded-xs object-cover inline-block shadow-xs shrink-0" alt="${region.country}" />
-            <span class="font-sans font-semibold tracking-wide text-slate-100">${region.city}</span>
-            <span class="text-[11px] text-gold-400 font-bold ml-1 marker-time-val">${formattedTime.hoursMinutes}</span>
+            <span class="font-sans font-semibold tracking-wide marker-city-val ${cityTextClass}">${region.city}</span>
+            <span class="text-[11px] font-bold ml-1 marker-time-val ${timeTextClass}">${formattedTime.hoursMinutes}</span>
           </div>
 
           <!-- Marker Pin Tip -->
-          <div class="marker-tip w-2 h-2 rotate-45 -mt-1 border-r border-b ${
-            isPinned
-              ? 'bg-navy-900 border-gold-500'
-              : 'bg-navy-950 border-white/10 group-hover:border-gold-400/60'
-          }"></div>
+          <div class="marker-tip w-2 h-2 rotate-45 -mt-1 border-r border-b ${pinTipClass}"></div>
         </div>
       `;
 

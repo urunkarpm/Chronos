@@ -61,17 +61,18 @@ export const Globe: React.FC<GlobeProps> = ({
     }
 
     try {
+      const isDark = document.documentElement.classList.contains('dark');
       // Create Globe instance attached to container element
       const globe = GlobeFactory()(containerRef.current)
         .width(width)
         .height(height)
-        .backgroundColor('rgba(5, 8, 17, 1)')
+        .backgroundColor(isDark ? 'rgba(5, 8, 17, 1)' : 'rgba(241, 245, 249, 1)')
         // High-resolution actual satellite map imagery texture of Earth
         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         // Topographic bump map for realistic 3D surface relief
         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
         // Atmosphere glow parameters
-        .atmosphereColor('#0f172a')
+        .atmosphereColor(isDark ? '#0f172a' : '#cbd5e1')
         .atmosphereAltitude(0.15)
         .showAtmosphere(true);
 
@@ -171,7 +172,7 @@ export const Globe: React.FC<GlobeProps> = ({
   }, [cityPoints, pinnedRegionId, visibleRegions]);
 
   return (
-    <div className="relative w-full h-full bg-navy-950 overflow-hidden select-none">
+    <div className="relative w-full h-full bg-slate-100 dark:bg-navy-950 overflow-hidden select-none">
       {/* 3D WebGL Globe Render Container */}
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing z-0" />
     </div>

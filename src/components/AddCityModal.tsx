@@ -79,7 +79,7 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
             <h2 className="text-xl sm:text-2xl font-bold text-slate-100 font-serif tracking-wide">
               Add Timezone Regions
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-400 font-medium mt-0.5">
               Search any location globally — cities, towns, villages &amp; districts worldwide.
             </p>
           </div>
@@ -88,6 +88,7 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
               if (soundEnabled) playUISound('click');
               onClose();
             }}
+            aria-label="Close modal"
             className="btn-close"
           >
             <X className="w-5 h-5" />
@@ -111,6 +112,7 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
               query && (
                 <button
                   onClick={() => setQuery('')}
+                  aria-label="Clear search query"
                   className="absolute right-3 top-3 text-slate-400 hover:text-slate-200"
                 >
                   <X className="w-4 h-4" />
@@ -148,9 +150,9 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
                   <div className="flex items-center gap-3 min-w-0">
                     <FlagIcon countryCode={reg.countryCode} alt={reg.country} className="w-6 h-4 rounded-xs shadow-xs shrink-0" />
                     <div className="min-w-0">
-                      <div className="font-semibold text-sm text-slate-100 truncate">{reg.city}</div>
-                      <div className="text-xs text-slate-400 truncate mt-0.5">
-                        {reg.description || reg.country} &bull; <span className="text-gold-400 font-medium">{reg.continent}</span>
+                      <div className="font-bold text-sm text-slate-100 truncate">{reg.city}</div>
+                      <div className="text-xs text-slate-400 font-medium truncate mt-0.5">
+                        {reg.description || reg.country} &bull; <span className="text-gold-400 font-bold">{reg.continent}</span>
                       </div>
                     </div>
                   </div>
@@ -158,7 +160,7 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
                   <div className="flex items-center gap-4 shrink-0">
                     <div className="text-right font-sans tabular-nums">
                       <div className="text-xs font-bold text-gold-400">{timeFormatted.hoursMinutes}</div>
-                      <div className="text-[10px] text-slate-400">{reg.timezone}</div>
+                      <div className="text-[10px] text-slate-400 font-semibold">{reg.timezone}</div>
                     </div>
 
                     <button
@@ -171,7 +173,7 @@ export const AddCityModal: React.FC<AddCityModalProps> = ({
                     >
                       {isActive ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" />
+                          <Check className="w-3.5 h-3.5 text-emerald-300 stroke-[3]" />
                           <span>Active</span>
                         </>
                       ) : (

@@ -105,10 +105,20 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
       <aside className="fixed inset-x-2.5 bottom-2.5 md:bottom-auto md:top-24 md:right-5 md:left-auto z-40 w-[calc(100%-1.25rem)] md:w-96 md:max-w-sm glass-panel-gold rounded-2xl md:rounded-3xl p-3 md:p-6 shadow-2xl overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-right-4">
         {/* Mobile Drag Indicator Bar */}
         <div
-          className="w-10 h-1 bg-gold-500/40 rounded-full mx-auto mb-2 md:hidden cursor-pointer active:bg-gold-400 transition-colors"
+          role="button"
+          tabIndex={0}
+          aria-label={isExpandedMobile ? 'Collapse details panel' : 'Expand details panel'}
+          className="w-12 h-2 py-0.5 bg-gold-500/40 rounded-full mx-auto mb-2 md:hidden cursor-pointer active:bg-gold-400 transition-colors focus-visible:ring-2 focus-visible:ring-gold-400"
           onClick={() => {
             if (soundEnabled) playUISound('toggle');
             setIsExpandedMobile(!isExpandedMobile);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (soundEnabled) playUISound('toggle');
+              setIsExpandedMobile(!isExpandedMobile);
+            }
           }}
         />
 
@@ -117,13 +127,13 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
           <div className="flex items-center gap-2.5 min-w-0 pr-2">
             <FlagIcon countryCode={region.countryCode} alt={region.country} className="w-7 h-4.5 rounded-xs shadow-xs shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-base md:text-xl font-serif font-extrabold tracking-wider text-slate-100 flex items-center gap-1.5 truncate">
+              <h2 className="text-base md:text-xl font-serif font-black tracking-wider text-slate-100 flex items-center gap-1.5 truncate">
                 <span className="truncate">{region.city}</span>
-                <span className="badge-gold font-sans font-bold text-[10px] md:text-xs shrink-0">
+                <span className="badge-gold font-sans font-black text-[10px] md:text-xs shrink-0">
                   {utcOffset}
                 </span>
               </h2>
-              <p className="text-[11px] md:text-xs font-sans text-slate-400 font-medium truncate">{region.country} &bull; {region.continent}</p>
+              <p className="text-[11px] md:text-xs font-sans text-slate-400 font-semibold truncate">{region.country} &bull; {region.continent}</p>
             </div>
           </div>
 
@@ -132,7 +142,8 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               if (soundEnabled) playUISound('click');
               onClose();
             }}
-            className="btn-close shrink-0"
+            aria-label="Close panel"
+            className="btn-close shrink-0 text-slate-400 font-bold"
             title="Close panel (Esc)"
           >
             <X className="w-4 h-4 md:w-5 md:h-5" />
@@ -140,20 +151,20 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
         </div>
 
         {/* Main Time Display Block */}
-        <div className="my-2 md:my-4 p-2.5 md:p-5 rounded-xl md:rounded-2xl bg-navy-950/90 border border-gold-500/35 text-center shadow-inner relative overflow-hidden">
+        <div className="my-2 md:my-4 p-2.5 md:p-5 rounded-xl md:rounded-2xl bg-navy-950/90 border border-gold-500/35 text-center shadow-inner relative overflow-hidden backdrop-blur-md">
           <div className="hidden md:flex text-[10px] md:text-[11px] font-sans uppercase tracking-widest text-gold-400 mb-1 items-center justify-center gap-1.5 font-bold">
             <Clock className="w-3.5 h-3.5 text-gold-400" />
             <span>Local Standard Time</span>
           </div>
 
-          <div className="font-sans tabular-nums text-2xl md:text-4xl font-extrabold text-white tracking-tight flex items-baseline justify-center gap-1">
+          <div className="font-sans tabular-nums text-2xl md:text-4xl font-black text-white tracking-tight flex items-baseline justify-center gap-1">
             <span>{formattedTime.hoursMinutes}</span>
             <span className="text-sm md:text-lg font-bold text-gold-400">:{formattedTime.seconds}</span>
             {!is24Hour && <span className="text-xs md:text-sm font-bold text-gold-400/90 ml-1 uppercase">{formattedTime.amPm}</span>}
           </div>
 
           <div className="flex items-center justify-center gap-2 mt-0.5 md:mt-1 text-[11px] md:text-xs font-sans">
-            <span className="text-slate-300 font-medium">{formattedTime.dateStr}</span>
+            <span className="text-slate-300 font-bold">{formattedTime.dateStr}</span>
             <span className="text-slate-500">&bull;</span>
             <span
               className={`font-bold tabular-nums ${
@@ -173,18 +184,18 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             <div className="flex items-center gap-1.5 min-w-0">
               <Thermometer className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               {isLoadingWeather ? (
-                <span className="text-slate-400 text-[10px] animate-pulse">Loading temp...</span>
+                <span className="text-slate-400 text-[10px] font-bold animate-pulse">Loading temp...</span>
               ) : weather ? (
                 <div className="flex items-center gap-1.5 truncate">
-                  <span className="font-extrabold text-amber-300 tabular-nums text-xs">
+                  <span className="font-bold text-amber-300 tabular-nums text-xs">
                     {tempUnit === 'C' ? `${weather.temperatureC}°C` : `${weather.temperatureF}°F`}
                   </span>
-                  <span className="text-slate-300 text-[10px] truncate">
+                  <span className="text-slate-300 text-[10px] font-semibold truncate">
                     &bull; {weather.weatherDescription}
                   </span>
                 </div>
               ) : (
-                <span className="text-slate-500 text-[10px]">Temp unavailable</span>
+                <span className="text-slate-400 text-[10px] font-bold">Temp unavailable</span>
               )}
             </div>
 
@@ -198,8 +209,8 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 }}
                 className={`px-1.5 py-0.5 rounded-md transition-all ${
                   tempUnit === 'C'
-                    ? 'bg-gold-500 text-navy-950 font-extrabold shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-gold-500 text-navy-950 font-black shadow-xs'
+                    : 'text-slate-400 font-semibold hover:text-slate-200'
                 }`}
                 title="Switch unit to Celsius (°C)"
               >
@@ -213,8 +224,8 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 }}
                 className={`px-1.5 py-0.5 rounded-md transition-all ${
                   tempUnit === 'F'
-                    ? 'bg-gold-500 text-navy-950 font-extrabold shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-gold-500 text-navy-950 font-black shadow-xs'
+                    : 'text-slate-400 font-semibold hover:text-slate-200'
                 }`}
                 title="Switch unit to Fahrenheit (°F)"
               >
@@ -231,7 +242,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               if (soundEnabled) playUISound('click');
               onSetAsReference(isReference ? null : region.id);
             }}
-            className={`flex-1 h-9 px-3 text-xs font-semibold rounded-xl ${
+            className={`flex-1 h-9 px-3 text-xs font-bold rounded-xl ${
               isReference
                 ? 'btn-secondary bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
                 : 'btn-secondary'
@@ -246,7 +257,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               if (soundEnabled) playUISound('toggle');
               setIsExpandedMobile(!isExpandedMobile);
             }}
-            className="btn-secondary h-9 px-3 text-xs text-slate-200 flex items-center gap-1 font-semibold shrink-0"
+            className="btn-secondary h-9 px-3 text-xs text-slate-200 flex items-center gap-1 font-bold shrink-0"
           >
             <span>{isExpandedMobile ? 'Less' : 'More'}</span>
             {isExpandedMobile ? <ChevronDown className="w-3.5 h-3.5 text-gold-400" /> : <ChevronUp className="w-3.5 h-3.5 text-gold-400" />}
@@ -256,10 +267,10 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
         {/* Detailed Sections: Always visible on Desktop, collapsible on Mobile */}
         <div className={`${isExpandedMobile ? 'block' : 'hidden md:block'} space-y-3 mt-3 pt-3 border-t border-slate-800/80 max-h-[45vh] md:max-h-none overflow-y-auto custom-scrollbar`}>
           {/* Daylight & Solar Cycle Bar */}
-          <div className="p-3.5 rounded-xl md:rounded-2xl bg-navy-900/70 border border-slate-800/90">
+          <div className="p-3.5 rounded-xl md:rounded-2xl bg-navy-900/70 border border-slate-800/90 backdrop-blur-md">
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-slate-200 font-sans font-semibold flex items-center gap-1.5">
-                {solar.isDaytime ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+              <span className="text-slate-200 font-sans font-bold flex items-center gap-1.5">
+                {solar.isDaytime ? <Sun className="w-4 h-4 text-amber-400 stroke-[2.5]" /> : <Moon className="w-4 h-4 text-indigo-400 stroke-[2.5]" />}
                 Daylight Cycle
               </span>
               <span className="font-sans tabular-nums text-[11px] text-gold-400 font-bold">{solar.dayLength} daylight</span>
@@ -273,7 +284,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-sans text-slate-300 font-medium">
+            <div className="flex items-center justify-between text-[11px] font-sans text-slate-300 font-semibold">
               <div className="flex items-center gap-1.5">
                 <Sunrise className="w-3.5 h-3.5 text-amber-400" />
                 <span>Sunrise <strong className="font-sans tabular-nums font-bold text-slate-200">{solar.sunrise}</strong></span>
@@ -287,7 +298,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
 
           {/* Regional Details Grid */}
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 flex flex-col justify-between">
+            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 backdrop-blur-md flex flex-col justify-between">
               <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
                 {disasterAlerts.length > 0 ? (
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
@@ -296,16 +307,16 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 )}
                 Govt Alarm
               </div>
-              <div className="font-sans font-semibold text-slate-100 truncate text-[11px] text-center flex items-center justify-center">
+              <div className="font-sans font-bold text-slate-100 truncate text-[11px] text-center flex items-center justify-center">
                 {isLoadingAlerts ? (
-                  <span className="text-slate-400 animate-pulse text-[10px]">Checking alerts...</span>
+                  <span className="text-slate-400 animate-pulse text-[10px] font-bold">Checking alerts...</span>
                 ) : disasterAlerts.length > 0 ? (
                   <span className="text-rose-400 font-bold truncate flex items-center justify-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping inline-block shrink-0" />
                     {disasterAlerts[0].event}
                   </span>
                 ) : (
-                  <span className="text-emerald-400 font-medium text-[10px] flex items-center justify-center gap-1">
+                  <span className="text-emerald-400 font-bold text-[10px] flex items-center justify-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
                     All Clear (No Warning)
                   </span>
@@ -313,15 +324,15 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               </div>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
+            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 backdrop-blur-md">
               <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
                 <Users className="w-3.5 h-3.5 text-gold-400" />
                 Population
               </div>
-              <div className="font-sans font-semibold text-slate-100 text-center">{region.population || 'N/A'}</div>
+              <div className="font-sans font-bold text-slate-100 text-center">{region.population || 'N/A'}</div>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
+            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 backdrop-blur-md">
               <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
                 <Phone className="w-3.5 h-3.5 text-gold-400" />
                 Dialing Code
@@ -331,7 +342,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               </div>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
+            <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 backdrop-blur-md">
               <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
                 <Landmark className="w-3.5 h-3.5 text-gold-400" />
                 Capital City
@@ -351,11 +362,11 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               }}
               className={`w-full ${
                 isReference
-                  ? 'btn-secondary bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                  ? 'btn-secondary bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
                   : 'btn-secondary'
               }`}
             >
-              {isReference ? <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[3]" /> : null}
+              {isReference ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" /> : null}
               <span>{isReference ? 'Reference Set' : 'Set Reference'}</span>
             </button>
           </div>
