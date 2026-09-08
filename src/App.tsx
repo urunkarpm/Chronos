@@ -140,17 +140,11 @@ export function App() {
     }
   }, [allRegions]);
 
-  // Auto-detect user location on initial app load if no home currency preference was explicitly saved
+  // Auto-detect user location on initial app load
   useEffect(() => {
-    try {
-      const savedCurrency = localStorage.getItem(STORAGE_HOME_CURRENCY);
-      if (!savedCurrency) {
-        handleAutoDetectLocation();
-      }
-    } catch (e) {
-      handleAutoDetectLocation();
-    }
+    handleAutoDetectLocation();
   }, [handleAutoDetectLocation]);
+
 
 
   const [pinnedRegionId, setPinnedRegionId] = useState<string | null>(null);

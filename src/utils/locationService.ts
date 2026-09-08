@@ -302,7 +302,7 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
             console.warn('Browser geolocation prompt dismissed or failed:', err);
             resolve(null);
           },
-          { timeout: 8000, maximumAge: 60000 }
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
         );
       });
 
@@ -336,7 +336,33 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
     }
   }
 
-  // 2. Fallback: Silent IP-based Geolocation Lookup
+  // 2. Fallback A: Ultra-reliable CORS-open GeoJS IP Lookup (Mobile HTTPS friendly)
+  try {
+    const geoJsRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+    if (geoJsRes.ok) {
+      const data = await geoJsRes.json();
+      if (data && data.country_code) {
+        const countryCode = data.country_code.toUpperCase();
+        const currencyCode = getCurrencyForCountry(countryCode).code;
+        const tempUnit: TemperatureUnit = FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
+        const lat = parseFloat(data.latitude) || undefined;
+        const lng = parseFloat(data.longitude) || undefined;
+        return {
+          countryCode,
+          country: data.country || countryCode,
+          city: data.city || '',
+          lat,
+          lng,
+          currencyCode,
+          tempUnit,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('GeoJS IP lookup failed:', e);
+  }
+
+  // 2. Fallback B: IPAPI.co Lookup
   try {
     const res = await fetch('https://ipapi.co/json/');
     if (res.ok) {
@@ -357,20 +383,25 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
       }
     }
   } catch (e) {
-    console.warn('IP location fetch failed:', e);
+    console.warn('IPAPI location fetch failed:', e);
   }
 
-  // 3. Fallback: Browser Timezone inspection
+  // 3. Fallback C: Client-side Browser Timezone inspection
   try {
-    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
     if (userTz) {
-      if (
-        userTz.startsWith('America/New_York') ||
-        userTz.startsWith('America/Chicago') ||
-        userTz.startsWith('America/Los_Angeles') ||
-        userTz.startsWith('America/Denver') ||
-        userTz.startsWith('US/')
-      ) {
+      if (userTz.startsWith('Asia/Kolkata') || userTz.startsWith('Asia/Calcutta')) {
+        return {
+          countryCode: 'IN',
+          country: 'India',
+          city: 'New Delhi',
+          lat: 28.6139,
+          lng: 77.209,
+          currencyCode: 'INR',
+          tempUnit: 'C',
+        };
+      }
+      if (userTz.startsWith('America/')) {
         return {
           countryCode: 'US',
           country: 'United States',
@@ -381,11 +412,34 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
           tempUnit: 'F',
         };
       }
+      if (userTz.startsWith('Europe/London')) {
+        return {
+          countryCode: 'GB',
+          country: 'United Kingdom',
+          city: 'London',
+          lat: 51.5074,
+          lng: -0.1278,
+          currencyCode: 'GBP',
+          tempUnit: 'C',
+        };
+      }
+      if (userTz.startsWith('Asia/Tokyo')) {
+        return {
+          countryCode: 'JP',
+          country: 'Japan',
+          city: 'Tokyo',
+          lat: 35.6762,
+          lng: 139.6503,
+          currencyCode: 'JPY',
+          tempUnit: 'C',
+        };
+      }
     }
   } catch (e) {}
 
   return null;
 }
+
 
 
 
