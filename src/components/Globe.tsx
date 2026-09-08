@@ -3,6 +3,8 @@ import GlobeGL from 'globe.gl';
 import * as THREE from 'three';
 import { TimeRegion } from '../types';
 
+import { WORLD_COUNTRY_LABELS } from '../data/countryLabels';
+
 interface GlobeProps {
   visibleRegions: TimeRegion[];
   pinnedRegionId: string | null;
@@ -91,6 +93,17 @@ export const Globe: React.FC<GlobeProps> = ({
             onSelectRegion(d.region);
           }
         });
+
+      // Native WebGL Crisp Country Name Labels
+      globe.labelsData(WORLD_COUNTRY_LABELS)
+        .labelLat((d: any) => d.lat)
+        .labelLng((d: any) => d.lng)
+        .labelText((d: any) => d.name)
+        .labelSize((d: any) => d.size || 0.85)
+        .labelDotRadius(0)
+        .labelColor(() => 'rgba(248, 250, 252, 0.65)')
+        .labelResolution(2)
+        .labelAltitude(0.008);
 
       // Configure Orbit Controls
       const controls = globe.controls();
