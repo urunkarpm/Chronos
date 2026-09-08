@@ -142,14 +142,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop UTC Clock Badge (Hidden on small mobile screens to prevent overflow) */}
-          <div className="hidden sm:flex items-center gap-3 pl-3.5 border-l border-slate-700/60 font-sans tabular-nums text-xs shrink-0">
+          <div className="hidden sm:flex items-center gap-3 pl-3.5 border-l border-slate-700/60 font-sans tabular-nums text-xs shrink-0 select-none">
             <div className="flex flex-col">
               <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 font-semibold">UTC</span>
-              <span className="text-gold-400 font-bold text-xs sm:text-sm tracking-wider">{utcTimeStr}</span>
+              <span className="text-gold-400 font-bold text-xs sm:text-sm tracking-wider inline-block min-w-[78px] sm:min-w-[88px] text-left">{utcTimeStr}</span>
             </div>
             <div className="hidden md:flex flex-col pl-3.5 border-l border-slate-800">
               <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Your Time</span>
-              <span className="text-slate-200 font-bold tracking-wider">{localTimeStr}</span>
+              <span className="text-slate-200 font-bold tracking-wider inline-block min-w-[98px] sm:min-w-[108px] text-left">{localTimeStr}</span>
             </div>
           </div>
         </div>
@@ -377,9 +377,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Slide-Down Settings & Menu Sheet */}
       {isMobileMenuOpen && (
         <div className="md:hidden px-4 py-4 border-t border-gold-500/20 bg-navy-950/75 backdrop-blur-md animate-in slide-in-from-top-3 duration-200 space-y-3">
-          <div className="flex items-center justify-between text-xs font-mono pb-2.5 border-b border-slate-800/80">
-            <span className="text-slate-400">Your Local Time</span>
-            <span className="text-gold-400 font-bold">{localTimeStr}</span>
+          <div className="flex items-center justify-between text-xs font-sans tabular-nums pb-2.5 border-b border-slate-800/80">
+            <span className="text-slate-400 font-medium">Your Local Time</span>
+            <span className="text-gold-400 font-bold inline-block min-w-[95px] text-right">{localTimeStr}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
