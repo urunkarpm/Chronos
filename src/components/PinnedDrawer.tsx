@@ -5,8 +5,8 @@ import {
   Moon,
   Sunrise,
   Sunset,
-  Compass,
-  Calendar,
+  Phone,
+  Landmark,
   AlertTriangle,
   ShieldCheck,
   Users,
@@ -27,6 +27,7 @@ import {
 } from '../utils/timeUtils';
 import { fetchWeatherData } from '../utils/weatherService';
 import { fetchDisasterAlerts } from '../utils/disasterAlertService';
+import { getCountryDialingCode, getCountryCapital } from '../data/countryMetadata';
 
 interface PinnedDrawerProps {
   region: TimeRegion;
@@ -287,7 +288,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
           {/* Regional Details Grid */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90 flex flex-col justify-between">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5 font-sans font-bold">
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
                 {disasterAlerts.length > 0 ? (
                   <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
                 ) : (
@@ -295,16 +296,16 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
                 )}
                 Govt Alarm
               </div>
-              <div className="font-sans font-semibold text-slate-100 truncate text-[11px]">
+              <div className="font-sans font-semibold text-slate-100 truncate text-[11px] text-center flex items-center justify-center">
                 {isLoadingAlerts ? (
                   <span className="text-slate-400 animate-pulse text-[10px]">Checking alerts...</span>
                 ) : disasterAlerts.length > 0 ? (
-                  <span className="text-rose-400 font-bold truncate flex items-center gap-1">
+                  <span className="text-rose-400 font-bold truncate flex items-center justify-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping inline-block shrink-0" />
                     {disasterAlerts[0].event}
                   </span>
                 ) : (
-                  <span className="text-emerald-400 font-medium text-[10px] flex items-center gap-1">
+                  <span className="text-emerald-400 font-medium text-[10px] flex items-center justify-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
                     All Clear (No Warning)
                   </span>
@@ -313,29 +314,31 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             </div>
 
             <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5 font-sans font-bold">
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
                 <Users className="w-3.5 h-3.5 text-gold-400" />
                 Population
               </div>
-              <div className="font-sans font-semibold text-slate-100">{region.population || 'N/A'}</div>
+              <div className="font-sans font-semibold text-slate-100 text-center">{region.population || 'N/A'}</div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5 font-sans font-bold">
-                <Compass className="w-3.5 h-3.5 text-gold-400" />
-                Coordinates
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
+                <Phone className="w-3.5 h-3.5 text-gold-400" />
+                Dialing Code
               </div>
-              <div className="font-sans tabular-nums text-[11px] text-slate-200 font-bold">
-                {region.lat.toFixed(2)}&deg;, {region.lng.toFixed(2)}&deg;
+              <div className="font-sans tabular-nums text-[11px] text-slate-200 font-bold text-center">
+                {getCountryDialingCode(region.countryCode)}
               </div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5 font-sans font-bold">
-                <Calendar className="w-3.5 h-3.5 text-gold-400" />
-                Timezone ID
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-1.5 font-sans font-bold">
+                <Landmark className="w-3.5 h-3.5 text-gold-400" />
+                Capital City
               </div>
-              <div className="font-sans text-[10px] text-slate-300 truncate font-semibold">{region.timezone}</div>
+              <div className="font-sans text-[11px] text-slate-200 truncate font-bold text-center">
+                {getCountryCapital(region.countryCode)}
+              </div>
             </div>
           </div>
 
