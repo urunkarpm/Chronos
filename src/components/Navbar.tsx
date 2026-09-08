@@ -9,9 +9,11 @@ import {
   X,
   Menu,
   Loader2,
+  Globe,
+  Map as MapIcon,
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
-import { Continent, TimeRegion } from '../types';
+import { Continent, TimeRegion, MapProjection } from '../types';
 import { formatTimeInZone, playUISound } from '../utils/timeUtils';
 import { searchGlobalLocations, scoreAndSortMatches } from '../utils/locationService';
 
@@ -23,6 +25,8 @@ interface NavbarProps {
   onToggle24Hour: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
+  mapProjection: MapProjection;
+  onToggleProjection: () => void;
   onSelectRegion: (region: TimeRegion) => void;
   onResetView: () => void;
   onOpenAddModal: () => void;
@@ -38,6 +42,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggle24Hour,
   soundEnabled,
   onToggleSound,
+  mapProjection = 'flat',
+  onToggleProjection,
   onSelectRegion,
   onResetView,
   onOpenAddModal,
@@ -244,6 +250,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">Add Location</span>
           </button>
 
+          {/* Flat Map / 3D Globe Projection Toggle */}
+          <button
+            onClick={() => {
+              if (soundEnabled) playUISound('toggle');
+              onToggleProjection();
+            }}
+            title="Switch between Flat Map & 3D Globe Projection"
+            className="btn-secondary hidden sm:inline-flex font-mono"
+          >
+            {mapProjection === 'globe' ? (
+              <>
+                <Globe className="w-3.5 h-3.5 text-gold-400" />
+                <span>3D Globe</span>
+              </>
+            ) : (
+              <>
+                <MapIcon className="w-3.5 h-3.5 text-gold-400" />
+                <span>Flat Map</span>
+              </>
+            )}
+          </button>
+
           {/* Desktop 12h/24h Toggle */}
           <button
             onClick={() => {
@@ -355,6 +383,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
+            {/* Flat / Globe View Toggle */}
+            <button
+              onClick={() => {
+                if (soundEnabled) playUISound('toggle');
+                onToggleProjection();
+              }}
+              className="btn-secondary w-full"
+            >
+              {mapProjection === 'globe' ? <Globe className="w-3.5 h-3.5 text-gold-400" /> : <MapIcon className="w-3.5 h-3.5 text-gold-400" />}
+              <span>{mapProjection === 'globe' ? '3D Globe' : 'Flat Map'}</span>
+            </button>
+
             {/* 12H/24H Button */}
             <button
               onClick={() => {
@@ -395,24 +435,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
 
-      {/* Floating Continent Filter Bar */}
-      <div className="px-4 py-2 border-t border-slate-800/40 bg-transparent overflow-x-auto custom-scrollbar whitespace-nowrap scroll-smooth flex items-center gap-2">
-        {continents.map((continent) => {
-          const active = selectedContinent === continent;
-          return (
-            <button
-              key={continent}
-              onClick={() => {
-                if (soundEnabled) playUISound('click');
-                onSelectContinent(continent);
-              }}
-              className={`pill-filter ${active ? 'pill-filter-active' : 'pill-filter-inactive'}`}
-            >
-              {continent}
-            </button>
-          );
-        })}
-      </div>
     </header>
   );
 };

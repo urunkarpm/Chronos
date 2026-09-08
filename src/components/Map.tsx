@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, memo } from 'react';
 import L from 'leaflet';
-import { TimeRegion } from '../types';
-import { formatTimeInZone } from '../utils/timeUtils';
+import { TimeRegion, MapProjection } from '../types';
+import { formatTimeInZone, calculateTerminatorLine } from '../utils/timeUtils';
+import { Globe } from './Globe';
 
 interface MapProps {
   visibleRegions: TimeRegion[];
@@ -11,6 +12,7 @@ interface MapProps {
   is24Hour: boolean;
   currentTime: Date;
   resetTrigger?: number;
+  mapProjection?: MapProjection;
 }
 
 export const MapComponent: React.FC<MapProps> = ({
@@ -21,10 +23,13 @@ export const MapComponent: React.FC<MapProps> = ({
   is24Hour,
   currentTime,
   resetTrigger,
+  mapProjection = 'flat',
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<globalThis.Map<string, L.Marker>>(new globalThis.Map());
+  const terminatorLineRef = useRef<L.Polyline | null>(null);
+  const terminatorPolygonRef = useRef<L.Polygon | null>(null);
 
   // Default world center view
   const DEFAULT_CENTER: [number, number] = [20, 0];
@@ -178,6 +183,49 @@ export const MapComponent: React.FC<MapProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Live real-time solar day/night terminator curve overlay
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    try {
+      const { line, nightPolygon } = calculateTerminatorLine(currentTime);
+
+      // 1. Update/Add Night Shadow Polygon
+      if (terminatorPolygonRef.current) {
+        terminatorPolygonRef.current.setLatLngs(nightPolygon);
+      } else {
+        const polygon = L.polygon(nightPolygon, {
+          fillColor: '#020617',
+          fillOpacity: 0.55,
+          stroke: false,
+          interactive: false,
+          className: 'pointer-events-none z-10',
+        });
+        polygon.addTo(map);
+        terminatorPolygonRef.current = polygon;
+      }
+
+      // 2. Update/Add Glowing Gold Solar Terminator Line
+      if (terminatorLineRef.current) {
+        terminatorLineRef.current.setLatLngs(line);
+      } else {
+        const polyline = L.polyline(line, {
+          color: '#F3E5AB',
+          weight: 3,
+          opacity: 0.95,
+          dashArray: '8, 6',
+          interactive: false,
+          className: 'pointer-events-none z-20',
+        });
+        polyline.addTo(map);
+        terminatorLineRef.current = polyline;
+      }
+    } catch (err) {
+      console.error('Terminator render error:', err);
+    }
+  }, [currentTime]);
+
   // Render dynamic Leaflet HTML Markers for each visible region
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -281,6 +329,19 @@ export const MapComponent: React.FC<MapProps> = ({
       }
     });
   }, [visibleRegions, pinnedRegionId, currentTime, is24Hour]);
+
+  if (mapProjection === 'globe') {
+    return (
+      <Globe
+        visibleRegions={visibleRegions}
+        pinnedRegionId={pinnedRegionId}
+        onSelectRegion={onSelectRegion}
+        onResetMap={onResetMap}
+        is24Hour={is24Hour}
+        currentTime={currentTime}
+      />
+    );
+  }
 
   return (
     <div className="relative w-full h-full">

@@ -59,7 +59,7 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
         }}
       />
 
-      <aside className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-20 md:right-5 md:left-auto z-40 w-full md:w-96 md:max-w-sm glass-panel-gold rounded-t-3xl md:rounded-3xl p-4 md:p-6 pb-[max(1rem,calc(env(safe-area-inset-bottom)+1rem))] md:pb-6 shadow-2xl max-h-[85vh] md:max-h-[calc(100vh-6.5rem)] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200">
+      <aside className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-24 md:right-5 md:left-auto z-40 w-full md:w-96 md:max-w-sm glass-panel-gold rounded-t-3xl md:rounded-3xl p-4 md:p-6 pb-[max(1rem,calc(env(safe-area-inset-bottom)+1rem))] md:pb-6 shadow-2xl max-h-[72vh] md:max-h-[calc(100vh-7.5rem)] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200">
         {/* Mobile drag bar indicator */}
         <div
           className="w-12 h-1.5 bg-gold-500/40 rounded-full mx-auto mb-3 md:hidden cursor-pointer active:bg-gold-400 transition-colors"
@@ -70,17 +70,17 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
         />
 
         {/* Top Bar: Header & Close Button */}
-        <div className="flex items-center justify-between pb-3 border-b border-gold-500/20">
+        <div className="flex items-center justify-between pb-3.5 border-b border-gold-500/20">
           <div className="flex items-center gap-3">
             <FlagIcon countryCode={region.countryCode} alt={region.country} className="w-8 h-5 rounded-xs shadow-xs shrink-0" />
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-slate-100 flex items-center gap-2">
+              <h2 className="text-lg md:text-xl font-serif font-extrabold tracking-wider text-slate-100 flex items-center gap-2">
                 <span>{region.city}</span>
-                <span className="badge-gold">
+                <span className="badge-gold font-mono font-semibold">
                   {utcOffset}
                 </span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">{region.country} &bull; {region.continent}</p>
+              <p className="text-xs font-sans text-slate-400 font-medium mt-0.5">{region.country} &bull; {region.continent}</p>
             </div>
           </div>
 
@@ -97,23 +97,23 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
         </div>
 
         {/* Hero Time Display */}
-        <div className="my-4 p-4 md:p-5 rounded-2xl bg-navy-950/90 border border-gold-500/30 text-center shadow-inner relative overflow-hidden">
-          <div className="text-[10px] md:text-[11px] font-mono uppercase tracking-widest text-gold-400 mb-1 flex items-center justify-center gap-1.5 font-semibold">
-            <Clock className="w-3.5 h-3.5" />
+        <div className="my-4 p-4 md:p-5 rounded-2xl bg-navy-950/90 border border-gold-500/35 text-center shadow-inner relative overflow-hidden">
+          <div className="text-[10px] md:text-[11px] font-sans uppercase tracking-widest text-gold-400 mb-1 flex items-center justify-center gap-1.5 font-bold">
+            <Clock className="w-3.5 h-3.5 text-gold-400" />
             <span>Local Standard Time</span>
           </div>
 
           <div className="font-mono text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-baseline justify-center gap-1 my-1">
             <span>{formattedTime.hoursMinutes}</span>
             <span className="text-base md:text-lg font-bold text-gold-400">:{formattedTime.seconds}</span>
-            {!is24Hour && <span className="text-xs md:text-sm font-bold text-slate-400 ml-1 uppercase">{formattedTime.amPm}</span>}
+            {!is24Hour && <span className="text-xs md:text-sm font-bold text-gold-400/90 ml-1 uppercase">{formattedTime.amPm}</span>}
           </div>
 
-          <div className="text-xs text-slate-300 font-medium mt-1">
+          <div className="text-xs font-sans text-slate-300 font-medium mt-1">
             {formattedTime.dateStr}
           </div>
 
-          <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 text-xs font-mono border border-slate-700/60">
+          <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-navy-900/90 text-xs font-mono border border-slate-700/60">
             <span className="text-slate-400">Offset:</span>
             <span
               className={`font-bold ${
@@ -129,16 +129,16 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
           </div>
         </div>
 
-        {/* Desktop-Only Extra Info: Daylight Cycle, Details Grid, Action Buttons */}
-        <div className="hidden md:block space-y-4">
+        {/* Extra Info: Daylight Cycle, Details Grid, Action Buttons */}
+        <div className="space-y-4">
           {/* Daylight & Solar Cycle Bar */}
           <div className="p-4 rounded-2xl bg-navy-900/70 border border-slate-800/90">
             <div className="flex items-center justify-between text-xs mb-2.5">
-              <span className="text-slate-300 font-medium flex items-center gap-1.5">
+              <span className="text-slate-200 font-sans font-semibold flex items-center gap-1.5">
                 {solar.isDaytime ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
                 Daylight Cycle
               </span>
-              <span className="font-mono text-[11px] text-slate-300 font-semibold">{solar.dayLength} daylight</span>
+              <span className="font-mono text-[11px] text-gold-400 font-bold">{solar.dayLength} daylight</span>
             </div>
 
             {/* Solar Progress Track */}
@@ -149,14 +149,14 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+            <div className="flex items-center justify-between text-[11px] font-sans text-slate-300 font-medium">
               <div className="flex items-center gap-1.5">
                 <Sunrise className="w-3.5 h-3.5 text-amber-400" />
-                <span>Sunrise {solar.sunrise}</span>
+                <span>Sunrise <strong className="font-mono font-bold text-slate-200">{solar.sunrise}</strong></span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Sunset className="w-3.5 h-3.5 text-rose-400" />
-                <span>Sunset {solar.sunset}</span>
+                <span>Sunset <strong className="font-mono font-bold text-slate-200">{solar.sunset}</strong></span>
               </div>
             </div>
           </div>
@@ -164,37 +164,37 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
           {/* Regional Details Grid */}
           <div className="grid grid-cols-2 gap-2.5 text-xs">
             <div className="p-3 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5 font-mono">
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans font-bold">
                 <Building className="w-3.5 h-3.5 text-gold-400" />
                 Landmark
               </div>
-              <div className="font-semibold text-slate-200 truncate">{region.landmark}</div>
+              <div className="font-sans font-semibold text-slate-100 truncate">{region.landmark}</div>
             </div>
 
             <div className="p-3 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5 font-mono">
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans font-bold">
                 <Users className="w-3.5 h-3.5 text-gold-400" />
                 Population
               </div>
-              <div className="font-semibold text-slate-200">{region.population || 'N/A'}</div>
+              <div className="font-sans font-semibold text-slate-100">{region.population || 'N/A'}</div>
             </div>
 
             <div className="p-3 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5 font-mono">
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans font-bold">
                 <Compass className="w-3.5 h-3.5 text-gold-400" />
                 Coordinates
               </div>
-              <div className="font-mono text-[11px] text-slate-200 font-medium">
+              <div className="font-mono text-[11px] text-slate-200 font-bold">
                 {region.lat.toFixed(2)}&deg;, {region.lng.toFixed(2)}&deg;
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-navy-900/70 border border-slate-800/90">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5 font-mono">
+              <div className="text-[10px] text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans font-bold">
                 <Calendar className="w-3.5 h-3.5 text-gold-400" />
                 Timezone ID
               </div>
-              <div className="font-mono text-[10px] text-slate-300 truncate">{region.timezone}</div>
+              <div className="font-mono text-[10px] text-slate-300 truncate font-semibold">{region.timezone}</div>
             </div>
           </div>
 

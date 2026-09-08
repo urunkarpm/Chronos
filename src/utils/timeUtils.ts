@@ -249,6 +249,49 @@ export function calculateSolarInfo(lat: number, lng: number, timezone: string, d
 }
 
 /**
+ * Calculate the exact coordinates of the solar day/night terminator line
+ * for a given UTC Date, returning an array of [lat, lng] points across the globe.
+ */
+export function calculateTerminatorLine(date: Date = new Date()): {
+  line: [number, number][];
+  nightPolygon: [number, number][];
+} {
+  const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+
+  // Exact solar declination angle (in radians)
+  const declinationDeg = 23.44 * Math.sin(((2 * Math.PI) / 365.25) * (dayOfYear - 81));
+  const declinationRad = (declinationDeg * Math.PI) / 180;
+  const tanDeclination = Math.tan(declinationRad);
+
+  // Subsolar longitude (Greenwich Meridian relative)
+  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  const subsolarLngDeg = (12 - utcHours) * 15;
+
+  const lineCoords: [number, number][] = [];
+
+  for (let lng = -180; lng <= 180; lng += 1) {
+    const diffRad = ((lng - subsolarLngDeg) * Math.PI) / 180;
+    const tanLat = -Math.cos(diffRad) / tanDeclination;
+    let lat = (Math.atan(tanLat) * 180) / Math.PI;
+
+    lat = Math.max(-85, Math.min(85, lat));
+    lineCoords.push([lat, lng]);
+  }
+
+  // Build a valid night hemisphere polygon
+  const isNorthernSummer = declinationRad >= 0;
+  const polarLat = isNorthernSummer ? -85 : 85;
+  const nightPolygon: [number, number][] = [
+    ...lineCoords,
+    [polarLat, 180],
+    [polarLat, -180],
+  ];
+
+  return { line: lineCoords, nightPolygon };
+}
+
+/**
  * Web Audio API Audio Synthesizer for subtle classy UI feedback
  */
 let audioCtx: AudioContext | null = null;

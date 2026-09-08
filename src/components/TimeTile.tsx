@@ -176,7 +176,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
             }`}
           >
             {solar.isDaytime ? (
-              <Sun className="w-3 h-3 text-amber-400 animate-spin-slow" />
+              <Sun className="w-3 h-3 text-amber-400" />
             ) : (
               <Moon className="w-3 h-3 text-indigo-400" />
             )}

@@ -1,6 +1,7 @@
 export type Continent = 'All' | 'Americas' | 'Europe' | 'Asia' | 'Africa' | 'Oceania' | 'Middle East' | 'Antarctica';
 
 export type MapTileTheme = 'satellite';
+export type MapProjection = 'flat' | 'globe';
 
 export interface TimeRegion {
   id: string;

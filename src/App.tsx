@@ -6,7 +6,7 @@ import { TimeTile } from './components/TimeTile';
 import { PinnedDrawer } from './components/PinnedDrawer';
 import { AddCityModal } from './components/AddCityModal';
 import { GLOBAL_REGIONS, INITIAL_DEFAULT_REGION_IDS } from './data/timezones';
-import { TimeRegion, Continent } from './types';
+import { TimeRegion, Continent, MapProjection } from './types';
 import { playUISound } from './utils/timeUtils';
 
 const STORAGE_CUSTOM_REGIONS = 'chronos_custom_regions';
@@ -14,6 +14,7 @@ const STORAGE_ACTIVE_REGION_IDS = 'chronos_active_region_ids';
 
 export function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [mapProjection, setMapProjection] = useState<MapProjection>('flat');
 
   // All known regions (default GLOBAL_REGIONS + custom added locations)
   const [allRegions, setAllRegions] = useState<TimeRegion[]>(() => {
@@ -166,6 +167,7 @@ export function App() {
           is24Hour={is24Hour}
           currentTime={currentTime}
           resetTrigger={resetTrigger}
+          mapProjection={mapProjection}
         />
       </div>
 
@@ -179,6 +181,8 @@ export function App() {
           onToggle24Hour={() => setIs24Hour((prev) => !prev)}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((prev) => !prev)}
+          mapProjection={mapProjection}
+          onToggleProjection={() => setMapProjection((prev) => (prev === 'flat' ? 'globe' : 'flat'))}
           onSelectRegion={handleSelectRegion}
           onResetView={handleResetMap}
           onOpenAddModal={() => setIsAddModalOpen(true)}

@@ -9,13 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/three": "^0.185.4",
     "clsx": "^2.1.1",
+    "cobe": "^2.0.1",
     "framer-motion": "^11.18.2",
+    "globe.gl": "^2.46.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "satellite.js": "^7.1.0",
     "tailwind-merge": "^3.0.1",
+    "three": "^0.185.1",
     "tz-lookup": "^6.1.25"
   },
   "devDependencies": {
