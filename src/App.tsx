@@ -43,6 +43,7 @@ export function App() {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRatesMap>({});
   const [isAutoDetecting, setIsAutoDetecting] = useState<boolean>(false);
   const [userCountryCode, setUserCountryCode] = useState<string | null>(null);
+  const [userRegionId, setUserRegionId] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -123,6 +124,7 @@ export function App() {
             GLOBAL_REGIONS.find((r) => r.countryCode.toUpperCase() === code);
 
           if (targetRegion) {
+            setUserRegionId(targetRegion.id);
             setAllRegions((prev) =>
               prev.some((r) => r.id === targetRegion.id) ? prev : [targetRegion, ...prev]
             );
@@ -266,6 +268,8 @@ export function App() {
         <Map
           visibleRegions={allActiveRegions}
           pinnedRegionId={pinnedRegionId}
+          userRegionId={userRegionId}
+          userCountryCode={userCountryCode}
           onSelectRegion={handleSelectRegion}
           onResetMap={handleResetMap}
           is24Hour={is24Hour}

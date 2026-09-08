@@ -7,6 +7,8 @@ import { Globe } from './Globe';
 interface MapProps {
   visibleRegions: TimeRegion[];
   pinnedRegionId: string | null;
+  userRegionId?: string | null;
+  userCountryCode?: string | null;
   onSelectRegion: (region: TimeRegion) => void;
   onResetMap: () => void;
   is24Hour: boolean;
@@ -18,6 +20,8 @@ interface MapProps {
 export const MapComponent: React.FC<MapProps> = ({
   visibleRegions,
   pinnedRegionId,
+  userRegionId,
+  userCountryCode,
   onSelectRegion,
   onResetMap,
   is24Hour,
@@ -119,7 +123,7 @@ export const MapComponent: React.FC<MapProps> = ({
     };
   }, [mapProjection]);
 
-  // Handle map zoom/pan when pinned region changes or resets with precise visual centering
+  // Handle map zoom/pan when pinned region changes or resets with precise visual centering on user location
   useEffect(() => {
     if (mapProjection === 'globe') return;
     const map = mapInstanceRef.current;
@@ -129,48 +133,69 @@ export const MapComponent: React.FC<MapProps> = ({
     const timer = setTimeout(() => {
       map.invalidateSize({ animate: false });
 
+      const isMobile = window.innerWidth < 768;
+      let targetRegion: TimeRegion | null = null;
+      let targetZoom = 4.5;
+      let navHeight = 60;
+      let bottomDrawerHeight = 0;
+      let rightDrawerWidth = 0;
+
       if (pinnedRegionId) {
-        const pinned = visibleRegions.find((r) => r.id === pinnedRegionId);
-        if (pinned) {
-          const isMobile = window.innerWidth < 768;
-          const targetZoom = isMobile ? 6 : 6.5;
-
-          // Accurately measure visible open screen area (accounting for navbar at top & drawer at bottom/side)
-          const navHeight = isMobile ? 88 : 60;
-          const bottomDrawerHeight = isMobile ? 85 : 0;
-          const rightDrawerWidth = isMobile ? 0 : 384;
-
-          const mapSize = map.getSize();
-          const mapWidth = mapSize.x;
-          const mapHeight = mapSize.y;
-
-          // Target visual center point in pixels from top-left of container
-          const visualCenterX = (mapWidth - rightDrawerWidth) / 2;
-          const visualCenterY = navHeight + (mapHeight - navHeight - bottomDrawerHeight) / 2;
-
-          // Container geometric center
-          const geomCenterX = mapWidth / 2;
-          const geomCenterY = mapHeight / 2;
-
-          // Project pinned location at target zoom
-          const containerPoint = map.project([pinned.lat, pinned.lng], targetZoom);
-
-          // Calculate shifted center point in pixel space
-          const shiftX = geomCenterX - visualCenterX;
-          const shiftY = geomCenterY - visualCenterY;
-
-          const newCenterPoint = L.point(containerPoint.x + shiftX, containerPoint.y + shiftY);
-          const newCenterLatLng = map.unproject(newCenterPoint, targetZoom);
-
-          // Fly directly to newCenterLatLng with ultra-fast response
-          map.flyTo(newCenterLatLng, targetZoom, {
-            duration: 0.65,
-            easeLinearity: 0.1,
-            animate: true,
-          });
+        targetRegion = visibleRegions.find((r) => r.id === pinnedRegionId) || null;
+        if (targetRegion) {
+          targetZoom = isMobile ? 6 : 6.5;
+          navHeight = isMobile ? 88 : 60;
+          bottomDrawerHeight = isMobile ? 85 : 0;
+          rightDrawerWidth = isMobile ? 0 : 384;
         }
       } else {
-        // Direct zoom out to default world view
+        // If unpinned, center map directly on user's detected location
+        targetRegion =
+          (userRegionId ? visibleRegions.find((r) => r.id === userRegionId) : null) ||
+          (userCountryCode
+            ? visibleRegions.find((r) => r.countryCode.toUpperCase() === userCountryCode.toUpperCase())
+            : null) ||
+          visibleRegions[0] ||
+          null;
+
+        if (targetRegion) {
+          targetZoom = isMobile ? 4.5 : 4.5;
+          navHeight = isMobile ? 88 : 60;
+          bottomDrawerHeight = isMobile ? 85 : 120;
+          rightDrawerWidth = 0;
+        }
+      }
+
+      if (targetRegion) {
+        const mapSize = map.getSize();
+        const mapWidth = mapSize.x;
+        const mapHeight = mapSize.y;
+
+        // Target visual center point in pixels from top-left of container
+        const visualCenterX = (mapWidth - rightDrawerWidth) / 2;
+        const visualCenterY = navHeight + (mapHeight - navHeight - bottomDrawerHeight) / 2;
+
+        // Container geometric center
+        const geomCenterX = mapWidth / 2;
+        const geomCenterY = mapHeight / 2;
+
+        // Project target location at target zoom
+        const containerPoint = map.project([targetRegion.lat, targetRegion.lng], targetZoom);
+
+        // Calculate shifted center point in pixel space
+        const shiftX = geomCenterX - visualCenterX;
+        const shiftY = geomCenterY - visualCenterY;
+
+        const newCenterPoint = L.point(containerPoint.x + shiftX, containerPoint.y + shiftY);
+        const newCenterLatLng = map.unproject(newCenterPoint, targetZoom);
+
+        // Fly directly to newCenterLatLng with ultra-fast response
+        map.flyTo(newCenterLatLng, targetZoom, {
+          duration: 0.65,
+          easeLinearity: 0.1,
+          animate: true,
+        });
+      } else {
         map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, {
           duration: 0.65,
           easeLinearity: 0.1,
@@ -180,7 +205,7 @@ export const MapComponent: React.FC<MapProps> = ({
     }, 40);
 
     return () => clearTimeout(timer);
-  }, [pinnedRegionId, resetTrigger, mapProjection, visibleRegions]);
+  }, [pinnedRegionId, userRegionId, userCountryCode, resetTrigger, mapProjection, visibleRegions]);
 
   // Handle window resize to keep Leaflet map container bounds in sync
   useEffect(() => {
