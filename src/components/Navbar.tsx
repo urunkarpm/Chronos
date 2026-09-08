@@ -236,7 +236,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right: Controls & Mobile Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Quick Add City Button */}
           <button
             onClick={() => {
@@ -244,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onOpenAddModal();
             }}
             title="Add region to dashboard"
-            className="btn-primary min-w-[36px] min-h-[36px] p-2 sm:px-4 sm:py-2 shrink-0"
+            className="btn-primary"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span className="hidden sm:inline">Add Location</span>
@@ -257,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggleProjection();
             }}
             title="Switch between Flat Map & 3D Globe Projection"
-            className="btn-secondary hidden sm:inline-flex font-sans font-semibold w-[105px] shrink-0 justify-center"
+            className="btn-secondary hidden sm:inline-flex w-[115px]"
           >
             {mapProjection === 'globe' ? (
               <>
@@ -279,16 +279,32 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggle24Hour();
             }}
             title="Toggle 12h / 24h format"
-            className="btn-secondary hidden md:inline-flex font-sans font-semibold tabular-nums w-[68px] shrink-0 justify-center"
+            className="btn-secondary hidden md:inline-flex tabular-nums w-[76px]"
           >
             <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
             <span>{is24Hour ? '24H' : '12H'}</span>
           </button>
 
+          {/* Desktop Sound Toggle */}
+          <button
+            onClick={() => {
+              if (!soundEnabled) playUISound('chime');
+              onToggleSound();
+            }}
+            title="Toggle UI Audio Effects"
+            className="btn-secondary hidden sm:inline-flex w-9 p-0"
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            )}
+          </button>
+
           {/* Mobile Search Button Toggle */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="btn-icon md:hidden min-w-[36px] min-h-[36px] p-2"
+            className="btn-icon md:hidden"
             title="Search Cities"
           >
             <Search className="w-4 h-4 text-gold-400" />
@@ -297,7 +313,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Menu / Settings Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`btn-icon md:hidden min-w-[36px] min-h-[36px] p-2 ${
+            className={`btn-icon md:hidden ${
               isMobileMenuOpen ? 'text-gold-400 border-gold-500/60 bg-gold-500/10' : ''
             }`}
             title="Settings & Tools"
