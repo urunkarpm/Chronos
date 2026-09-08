@@ -158,7 +158,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         {/* Bottom Row: Date & Interactive Dual-Flag Exchange Rate Badge */}
         <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[9px] font-sans tabular-nums">
           <span className="text-[9px] text-slate-400 font-semibold">{formattedTime.shortDateStr}</span>
-          {renderRateBadge(true)}
+          {!rateDetails.isSameCurrency && renderRateBadge(true)}
         </div>
 
       </div>
@@ -219,7 +219,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         {/* Bottom Info Row: Date & Interactive Dual-Flag Exchange Rate Badge */}
         <div className="pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-sans tabular-nums">
           <span className="text-[10px] text-slate-400 font-semibold">{formattedTime.shortDateStr}</span>
-          {renderRateBadge(false)}
+          {!rateDetails.isSameCurrency && renderRateBadge(false)}
         </div>
 
       </div>
