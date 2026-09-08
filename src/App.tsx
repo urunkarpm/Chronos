@@ -231,7 +231,7 @@ export function App() {
 
       {/* Restore All Tiles Button (Appears when map is in center stage mode) */}
       {pinnedRegionId && (
-        <div className="fixed bottom-[max(16px,calc(16px+env(safe-area-inset-bottom)))] sm:bottom-10 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="hidden sm:block fixed bottom-[max(16px,calc(16px+env(safe-area-inset-bottom)))] sm:bottom-10 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => {
               if (soundEnabled) playUISound('zoom');
