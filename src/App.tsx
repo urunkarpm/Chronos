@@ -10,6 +10,7 @@ import { TimeRegion, Continent, MapProjection, TemperatureUnit, ExchangeRatesMap
 import { playUISound } from './utils/timeUtils';
 import { fetchExchangeRates } from './utils/currencyService';
 import { detectUserLocationAndPreferences } from './utils/locationService';
+import { preloadRegionTiles } from './utils/tilePreloader';
 
 const STORAGE_CUSTOM_REGIONS = 'chronos_custom_regions';
 const STORAGE_ACTIVE_REGION_IDS = 'chronos_active_region_ids';
@@ -154,6 +155,11 @@ export function App() {
   useEffect(() => {
     handleAutoDetectLocation();
   }, [handleAutoDetectLocation]);
+
+  // Pre-download and cache all map tiles in memory for smooth fly-to animations
+  useEffect(() => {
+    preloadRegionTiles(allRegions);
+  }, [allRegions]);
 
 
 

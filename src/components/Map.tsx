@@ -75,9 +75,9 @@ export const MapComponent: React.FC<MapProps> = ({
       {
         maxZoom: 18,
         subdomains: 'abcd',
-        updateWhenZooming: false,
-        updateWhenIdle: true,
-        keepBuffer: 16,
+        updateWhenZooming: true,
+        updateWhenIdle: false,
+        keepBuffer: 32,
         attribution: '&copy; Esri, Maxar, Earthstar Geographics',
         className: 'gpu-accelerated',
       }
@@ -89,9 +89,9 @@ export const MapComponent: React.FC<MapProps> = ({
       {
         maxZoom: 18,
         subdomains: 'abcd',
-        updateWhenZooming: false,
-        updateWhenIdle: true,
-        keepBuffer: 16,
+        updateWhenZooming: true,
+        updateWhenIdle: false,
+        keepBuffer: 32,
         attribution: '&copy; OpenStreetMap &copy; CARTO',
         className: 'gpu-accelerated',
       }
