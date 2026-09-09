@@ -163,6 +163,8 @@ export interface FormattedExchangeRateDetails {
   tileCountryCode: string;
   homeCode: string;
   homeCountryCode: string;
+  tileSymbol: string;
+  homeSymbol: string;
   normalText: string;
   flippedText: string;
   normalRateStr: string;
@@ -184,14 +186,19 @@ export function getExchangeRateDetails(
   const homeCountryCode = homeCurrency.flag || 'US';
   const tileCountryCode = (targetCountryCode || 'US').toUpperCase();
 
+  const homeSymbol = homeCurrency.symbol;
+  const tileSymbol = tileCurrency.symbol;
+
   if (homeCode === tileCode) {
     return {
       tileCode,
       tileCountryCode,
       homeCode,
       homeCountryCode,
-      normalText: `1 ${tileCode} = 1 ${homeCode}`,
-      flippedText: `1 ${homeCode} = 1 ${tileCode}`,
+      tileSymbol,
+      homeSymbol,
+      normalText: `1 ${tileSymbol} = 1 ${homeSymbol}`,
+      flippedText: `1 ${homeSymbol} = 1 ${tileSymbol}`,
       normalRateStr: '1.00',
       flippedRateStr: '1.00',
       isSameCurrency: true,
@@ -205,8 +212,10 @@ export function getExchangeRateDetails(
       tileCountryCode,
       homeCode,
       homeCountryCode,
-      normalText: `${tileCurrency.symbol} ${tileCode}`,
-      flippedText: `${homeCurrency.symbol} ${homeCode}`,
+      tileSymbol,
+      homeSymbol,
+      normalText: `${tileSymbol} ${tileCode}`,
+      flippedText: `${homeSymbol} ${homeCode}`,
       normalRateStr: '1.00',
       flippedRateStr: '1.00',
       isSameCurrency: false,
@@ -233,8 +242,10 @@ export function getExchangeRateDetails(
     tileCountryCode,
     homeCode,
     homeCountryCode,
-    normalText: `1 ${tileCode} = ${normalRateStr} ${homeCode}`,
-    flippedText: `100 ${homeCode} = ${flippedRateStr} ${tileCode}`,
+    tileSymbol,
+    homeSymbol,
+    normalText: `1 ${tileSymbol} = ${normalRateStr} ${homeSymbol}`,
+    flippedText: `100 ${homeSymbol} = ${flippedRateStr} ${tileSymbol}`,
     normalRateStr,
     flippedRateStr,
     isSameCurrency: false,
