@@ -284,27 +284,43 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline">Add Location</span>
           </button>
 
-          {/* Flat Map / 3D Globe Projection Toggle */}
-          <button
-            onClick={() => {
-              if (soundEnabled) playUISound('toggle');
-              onToggleProjection();
-            }}
-            title="Switch between Flat Map & 3D Globe Projection"
-            className="btn-secondary hidden sm:inline-flex w-[115px]"
-          >
-            {mapProjection === 'globe' ? (
-              <>
-                <Globe className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                <span>3D Globe</span>
-              </>
-            ) : (
-              <>
-                <MapIcon className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-                <span>Flat Map</span>
-              </>
-            )}
-          </button>
+          {/* Segmented Flat Map / 3D Globe Projection Toggle Switch */}
+          <div className="hidden sm:inline-flex items-center p-0.5 bg-navy-950/80 dark:bg-navy-950/80 border border-slate-700/60 dark:border-white/10 rounded-full shadow-inner select-none">
+            <button
+              onClick={() => {
+                if (mapProjection !== 'flat') {
+                  if (soundEnabled) playUISound('toggle');
+                  onToggleProjection();
+                }
+              }}
+              title="Flat Map View"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+                mapProjection === 'flat'
+                  ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              <MapIcon className={`w-3.5 h-3.5 ${mapProjection === 'flat' ? 'text-gold-400' : 'text-slate-400'}`} />
+              <span>Flat</span>
+            </button>
+            <button
+              onClick={() => {
+                if (mapProjection !== 'globe') {
+                  if (soundEnabled) playUISound('toggle');
+                  onToggleProjection();
+                }
+              }}
+              title="3D Globe View"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+                mapProjection === 'globe'
+                  ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              <Globe className={`w-3.5 h-3.5 ${mapProjection === 'globe' ? 'text-gold-400' : 'text-slate-400'}`} />
+              <span>Globe</span>
+            </button>
+          </div>
 
           {/* Desktop 12h/24h Toggle */}
           <button
@@ -494,17 +510,41 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {/* Flat / Globe View Toggle */}
-            <button
-              onClick={() => {
-                if (soundEnabled) playUISound('toggle');
-                onToggleProjection();
-              }}
-              className="btn-secondary w-full"
-            >
-              {mapProjection === 'globe' ? <Globe className="w-3.5 h-3.5 text-gold-400" /> : <MapIcon className="w-3.5 h-3.5 text-gold-400" />}
-              <span>{mapProjection === 'globe' ? '3D Globe' : 'Flat Map'}</span>
-            </button>
+            {/* Segmented Flat / Globe View Toggle */}
+            <div className="col-span-2 flex items-center p-1 bg-navy-950/90 border border-slate-700/60 rounded-full select-none">
+              <button
+                onClick={() => {
+                  if (mapProjection !== 'flat') {
+                    if (soundEnabled) playUISound('toggle');
+                    onToggleProjection();
+                  }
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+                  mapProjection === 'flat'
+                    ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                }`}
+              >
+                <MapIcon className={`w-3.5 h-3.5 ${mapProjection === 'flat' ? 'text-gold-400' : 'text-slate-400'}`} />
+                <span>Flat Map</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (mapProjection !== 'globe') {
+                    if (soundEnabled) playUISound('toggle');
+                    onToggleProjection();
+                  }
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+                  mapProjection === 'globe'
+                    ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                }`}
+              >
+                <Globe className={`w-3.5 h-3.5 ${mapProjection === 'globe' ? 'text-gold-400' : 'text-slate-400'}`} />
+                <span>3D Globe</span>
+              </button>
+            </div>
 
             {/* 12H/24H Button */}
             <button
