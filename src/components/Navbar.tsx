@@ -235,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Segmented Flat Map / 3D Globe Projection Toggle Switch */}
-          <div className="hidden sm:inline-flex items-center p-0.5 bg-navy-950/80 dark:bg-navy-950/80 border border-slate-700/60 dark:border-white/10 rounded-full shadow-inner select-none">
+          <div className="hidden sm:inline-flex items-center h-9 p-0.5 bg-navy-950/80 dark:bg-navy-950/80 border border-slate-700/60 dark:border-white/10 rounded-xl shadow-inner select-none">
             <button
               onClick={() => {
                 if (mapProjection !== 'flat') {
@@ -244,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }
               }}
               title="Flat Map View"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+              className={`h-8 flex items-center gap-1.5 px-3 rounded-lg text-xs font-sans font-bold transition-all duration-200 ${
                 mapProjection === 'flat'
                   ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
                   : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -261,7 +261,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }
               }}
               title="3D Globe View"
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+              className={`h-8 flex items-center gap-1.5 px-3 rounded-lg text-xs font-sans font-bold transition-all duration-200 ${
                 mapProjection === 'globe'
                   ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
                   : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -279,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onToggle24Hour();
             }}
             title="Toggle 12h / 24h format"
-            className="btn-secondary hidden md:inline-flex tabular-nums w-[76px]"
+            className="btn-secondary hidden md:inline-flex tabular-nums"
           >
             <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
             <span>{is24Hour ? '24H' : '12H'}</span>
@@ -293,7 +293,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setIsCurrencyOpen(!isCurrencyOpen);
               }}
               title="Select Base Currency for Tile Exchange Rates"
-              className="btn-secondary inline-flex items-center gap-1.5 px-2.5 min-w-[85px]"
+              className="btn-secondary inline-flex items-center gap-1.5"
             >
               <Coins className="w-3.5 h-3.5 text-gold-400 shrink-0" />
               <span>{selectedCurrency}</span>
