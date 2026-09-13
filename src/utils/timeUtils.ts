@@ -293,6 +293,18 @@ export function calculateTerminatorLine(date: Date = new Date()): {
 }
 
 /**
+ * Calculate exact real-time subsolar coordinates (lat, lng) where the sun is directly overhead.
+ */
+export function getSubsolarPoint(date: Date = new Date()): { lat: number; lng: number } {
+  const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+  const declinationDeg = 23.44 * Math.sin(((2 * Math.PI) / 365.25) * (dayOfYear - 81));
+  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  const subsolarLngDeg = (12 - utcHours) * 15;
+  return { lat: declinationDeg, lng: subsolarLngDeg };
+}
+
+/**
  * Web Audio API Audio Synthesizer for subtle classy UI feedback
  */
 let audioCtx: AudioContext | null = null;

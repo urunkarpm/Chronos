@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, memo } from 'react';
+import { motion } from 'framer-motion';
 import L from 'leaflet';
 import { TimeRegion, MapProjection, ThemeMode } from '../types';
 import { formatTimeInZone, calculateTerminatorLine } from '../utils/timeUtils';
@@ -43,7 +44,7 @@ export const MapComponent: React.FC<MapProps> = ({
 
   // Initialize Map instance with Satellite Night base layer
   useEffect(() => {
-    if (mapProjection === 'globe' || !mapContainerRef.current || mapInstanceRef.current) return;
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
       center: DEFAULT_CENTER,
@@ -134,7 +135,7 @@ export const MapComponent: React.FC<MapProps> = ({
       terminatorLineRef.current = null;
       terminatorPolygonRef.current = null;
     };
-  }, [mapProjection]);
+  }, []);
 
   // Handle map zoom/pan when pinned region changes or resets with precise visual centering on user location
   useEffect(() => {
@@ -392,25 +393,63 @@ export const MapComponent: React.FC<MapProps> = ({
     });
   }, [visibleRegions, pinnedRegionId, currentTime, is24Hour, mapProjection]);
 
-  if (mapProjection === 'globe') {
-    return (
-      <Globe
-        visibleRegions={visibleRegions}
-        pinnedRegionId={pinnedRegionId}
-        onSelectRegion={onSelectRegion}
-        onResetMap={onResetMap}
-        is24Hour={is24Hour}
-        currentTime={currentTime}
-      />
-    );
-  }
+  // Invalidate Leaflet map size on projection toggle to ensure tile grid renders smoothly
+  useEffect(() => {
+    if (mapProjection === 'flat' && mapInstanceRef.current) {
+      const timer = setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize({ animate: false });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [mapProjection]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
-      
-      {/* Subtle Ambient Glow Overlay */}
-      <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/60" />
+    <div className="relative w-full h-full overflow-hidden bg-navy-950 select-none">
+      {/* 2D Leaflet Flat Map Layer */}
+      <motion.div
+        className="absolute inset-0 w-full h-full z-0"
+        initial={false}
+        animate={{
+          opacity: mapProjection === 'flat' ? 1 : 0,
+          scale: mapProjection === 'flat' ? 1 : 1.08,
+          filter: mapProjection === 'flat' ? 'blur(0px)' : 'blur(6px)',
+          pointerEvents: mapProjection === 'flat' ? 'auto' : 'none',
+        }}
+        transition={{
+          duration: 0.5,
+          ease: [0.25, 0.1, 0.25, 1.0],
+        }}
+      >
+        <div ref={mapContainerRef} className="w-full h-full" />
+        {/* Ambient Glow Overlay for Flat Map */}
+        <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/60" />
+      </motion.div>
+
+      {/* 3D WebGL Globe Layer */}
+      <motion.div
+        className="absolute inset-0 w-full h-full z-10"
+        initial={false}
+        animate={{
+          opacity: mapProjection === 'globe' ? 1 : 0,
+          scale: mapProjection === 'globe' ? 1 : 0.92,
+          filter: mapProjection === 'globe' ? 'blur(0px)' : 'blur(6px)',
+          pointerEvents: mapProjection === 'globe' ? 'auto' : 'none',
+        }}
+        transition={{
+          duration: 0.5,
+          ease: [0.25, 0.1, 0.25, 1.0],
+        }}
+      >
+        <Globe
+          visibleRegions={visibleRegions}
+          pinnedRegionId={pinnedRegionId}
+          userRegionId={userRegionId}
+          onSelectRegion={onSelectRegion}
+          onResetMap={onResetMap}
+          is24Hour={is24Hour}
+          currentTime={currentTime}
+        />
+      </motion.div>
     </div>
   );
 };

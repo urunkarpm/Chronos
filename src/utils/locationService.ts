@@ -282,6 +282,7 @@ export async function searchGlobalLocations(
 export interface UserLocationPreferences {
   countryCode: string;
   country: string;
+  stateCode?: string;
   city?: string;
   lat?: number;
   lng?: number;
@@ -290,6 +291,65 @@ export interface UserLocationPreferences {
 }
 
 const FAHRENHEIT_COUNTRIES = new Set(['US', 'BS', 'BZ', 'KY', 'PW', 'MH', 'FM', 'LR']);
+
+const INDIAN_STATE_NAME_TO_CODE: Record<string, string> = {
+  maharashtra: 'MH',
+  delhi: 'DL',
+  'national capital territory of delhi': 'DL',
+  karnataka: 'KA',
+  'tamil nadu': 'TN',
+  telangana: 'TS',
+  'andhra pradesh': 'AP',
+  'west bengal': 'WB',
+  gujarat: 'GJ',
+  'uttar pradesh': 'UP',
+  rajasthan: 'RJ',
+  kerala: 'KL',
+  punjab: 'PB',
+  haryana: 'HR',
+  'madhya pradesh': 'MP',
+  bihar: 'BR',
+  odisha: 'OR',
+  orissa: 'OR',
+  assam: 'AS',
+  jharkhand: 'JH',
+  chhattisgarh: 'CT',
+  uttarakhand: 'UT',
+  himachal: 'HP',
+  'himachal pradesh': 'HP',
+  goa: 'GA',
+  tripura: 'TR',
+  meghalaya: 'ML',
+  manipur: 'MN',
+  nagaland: 'NL',
+  mizoram: 'MZ',
+  sikkim: 'SK',
+  'arunachal pradesh': 'AR',
+  'andaman and nicobar': 'AN',
+  chandigarh: 'CH',
+  dadra: 'DN',
+  'daman and diu': 'DN',
+  jammu: 'JK',
+  'jammu and kashmir': 'JK',
+  ladakh: 'LA',
+  lakshadweep: 'LD',
+  puducherry: 'PY',
+  pondicherry: 'PY',
+};
+
+function extractStateCode(subdivision?: string, regionCode?: string): string | undefined {
+  if (regionCode && regionCode.length === 2) {
+    const uc = regionCode.toUpperCase();
+    if (Object.values(INDIAN_STATE_NAME_TO_CODE).includes(uc)) return uc;
+  }
+  if (!subdivision) return undefined;
+  const s = subdivision.trim().toLowerCase();
+  if (s.startsWith('in-')) {
+    const code = s.replace('in-', '').toUpperCase();
+    if (Object.values(INDIAN_STATE_NAME_TO_CODE).includes(code)) return code;
+  }
+  return INDIAN_STATE_NAME_TO_CODE[s] || Object.entries(INDIAN_STATE_NAME_TO_CODE).find(([key]) => s.includes(key))?.[1];
+}
 
 export async function detectUserLocationAndPreferences(): Promise<UserLocationPreferences | null> {
   // 1. Primary: Native Browser HTML5 Geolocation API (Triggers Browser Permission Prompt)
@@ -319,9 +379,12 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
             const currencyCode = getCurrencyForCountry(countryCode).code;
             const tempUnit: TemperatureUnit = FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
             const city = geoData.city || geoData.locality || geoData.principalSubdivision || '';
+            const stateCode = extractStateCode(geoData.principalSubdivision || geoData.principalSubdivisionCode, geoData.countryCode);
+
             return {
               countryCode,
               country: geoData.countryName || countryCode,
+              stateCode,
               city,
               lat,
               lng,
@@ -347,9 +410,12 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
         const tempUnit: TemperatureUnit = FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
         const lat = parseFloat(data.latitude) || undefined;
         const lng = parseFloat(data.longitude) || undefined;
+        const stateCode = extractStateCode(data.region || data.region_code);
+
         return {
           countryCode,
           country: data.country || countryCode,
+          stateCode,
           city: data.city || '',
           lat,
           lng,
@@ -371,9 +437,12 @@ export async function detectUserLocationAndPreferences(): Promise<UserLocationPr
         const countryCode = data.country_code.toUpperCase();
         const currencyCode = data.currency || getCurrencyForCountry(countryCode).code;
         const tempUnit: TemperatureUnit = FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
+        const stateCode = extractStateCode(data.region, data.region_code);
+
         return {
           countryCode,
           country: data.country_name || countryCode,
+          stateCode,
           city: data.city,
           lat: data.latitude,
           lng: data.longitude,

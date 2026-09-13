@@ -100,7 +100,7 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         if (soundEnabled) playUISound('chime');
         onSelect(region);
       }}
-      className={`group relative p-3.5 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] ${
+      className={`group relative p-3.5 sm:p-4 rounded-2xl glass-card cursor-pointer transition-all duration-300 transform sm:hover:-translate-y-1 active:scale-[0.98] h-full flex flex-col justify-between ${
         isPinned
           ? 'border-2 border-gold-500 scale-[1.01] shadow-2xl'
           : 'hover:border-gold-500/60'
@@ -171,9 +171,15 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
         </div>
 
         {/* Bottom Row: Date & Interactive Exchange Rate Badge */}
-        <div className="flex items-center justify-between pt-2 sm:pt-2.5 border-t border-white/10 text-[9px] sm:text-[10px] font-sans tabular-nums">
+        <div className="flex items-center justify-between pt-2 sm:pt-2.5 border-t border-white/10 text-[9px] sm:text-[10px] font-sans tabular-nums min-h-[26px]">
           <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold">{formattedTime.shortDateStr}</span>
-          {!rateDetails.isSameCurrency && renderRateBadge(false)}
+          {!rateDetails.isSameCurrency ? (
+            renderRateBadge(false)
+          ) : (
+            <span className="inline-flex items-center gap-1 font-extrabold tabular-nums rounded-full text-gold-400 bg-gold-500/15 border border-gold-500/30 text-[9px] sm:text-[10px] px-2 py-0.5 select-none">
+              Base ({baseCurrencyCode})
+            </span>
+          )}
         </div>
 
       </div>

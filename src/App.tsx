@@ -5,6 +5,7 @@ import { Map } from './components/Map';
 import { TimeTile } from './components/TimeTile';
 import { PinnedDrawer } from './components/PinnedDrawer';
 import { AddCityModal } from './components/AddCityModal';
+import { HolidaysSidebar } from './components/HolidaysSidebar';
 import { GLOBAL_REGIONS, INITIAL_DEFAULT_REGION_IDS } from './data/timezones';
 import { TimeRegion, Continent, MapProjection, TemperatureUnit, ExchangeRatesMap, ThemeMode } from './types';
 import { playUISound } from './utils/timeUtils';
@@ -44,6 +45,7 @@ export function App() {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRatesMap>({});
   const [isAutoDetecting, setIsAutoDetecting] = useState<boolean>(false);
   const [userCountryCode, setUserCountryCode] = useState<string | null>(null);
+  const [userStateCode, setUserStateCode] = useState<string | null>(null);
   const [userRegionId, setUserRegionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -121,6 +123,9 @@ export function App() {
         }
         if (prefs.tempUnit) {
           setTempUnit(prefs.tempUnit);
+        }
+        if (prefs.stateCode) {
+          setUserStateCode(prefs.stateCode);
         }
         if (prefs.countryCode) {
           const code = prefs.countryCode.toUpperCase();
@@ -332,9 +337,9 @@ export function App() {
             <span className="badge-gold text-[9px] py-0.5">{visibleTiles.length} Active</span>
           </div>
 
-          <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 overflow-x-auto sm:overflow-x-visible overflow-y-visible sm:overflow-y-auto max-h-none sm:max-h-[38vh] md:max-h-[36vh] pt-1.5 pb-1 px-1 sm:p-1 custom-scrollbar snap-x snap-mandatory touch-pan-x sm:touch-pan-y">
+          <div className="flex sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-3.5 items-stretch overflow-x-auto sm:overflow-x-visible overflow-y-visible sm:overflow-y-auto max-h-none sm:max-h-[38vh] md:max-h-[36vh] pt-1.5 pb-1 px-1 sm:p-1 custom-scrollbar snap-x snap-mandatory touch-pan-x sm:touch-pan-y">
             {visibleTiles.map((region) => (
-              <div key={region.id} className="shrink-0 w-[200px] xs:w-[220px] sm:w-auto snap-center">
+              <div key={region.id} className="shrink-0 w-[200px] xs:w-[220px] sm:w-auto snap-center flex flex-col justify-stretch">
                 <TimeTile
                   region={region}
                   isPinned={region.id === pinnedRegionId}
@@ -389,6 +394,17 @@ export function App() {
           onToggleTempUnit={setTempUnit}
         />
       )}
+
+      {/* Floating Holidays Sidebar Container - Inline with Top Nav and end of last tile in max-w-7xl */}
+      <div className="fixed top-2 sm:top-4 inset-x-2 sm:inset-x-6 z-20 max-w-7xl mx-auto pointer-events-none flex justify-end">
+        <HolidaysSidebar
+          userCountryCode={userCountryCode}
+          userStateCode={userStateCode}
+          userRegionId={userRegionId}
+          pinnedRegionId={pinnedRegionId}
+          soundEnabled={soundEnabled}
+        />
+      </div>
 
       {/* Modals */}
       {isAddModalOpen && (

@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import GlobeGL from 'globe.gl';
 import * as THREE from 'three';
 import { TimeRegion } from '../types';
-
 import { WORLD_COUNTRY_LABELS } from '../data/countryLabels';
+import { formatTimeInZone, getSubsolarPoint } from '../utils/timeUtils';
 
 interface GlobeProps {
   visibleRegions: TimeRegion[];
   pinnedRegionId: string | null;
+  userRegionId?: string | null;
   onSelectRegion: (region: TimeRegion) => void;
   onResetMap: () => void;
   is24Hour: boolean;
@@ -17,6 +18,7 @@ interface GlobeProps {
 export const Globe: React.FC<GlobeProps> = ({
   visibleRegions,
   pinnedRegionId,
+  userRegionId,
   onSelectRegion,
   onResetMap,
   is24Hour,
@@ -24,36 +26,91 @@ export const Globe: React.FC<GlobeProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const globeInstanceRef = useRef<any>(null);
+  const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
 
-  // City markers data
-  const cityPoints = useMemo(() => {
-    return visibleRegions.map((region) => {
-      const isPinned = region.id === pinnedRegionId;
+  // Identify primary hub city (user region or pinned region or first visible region)
+  const homeRegion = useMemo(() => {
+    if (userRegionId) {
+      const found = visibleRegions.find((r) => r.id === userRegionId);
+      if (found) return found;
+    }
+    if (pinnedRegionId) {
+      const found = visibleRegions.find((r) => r.id === pinnedRegionId);
+      if (found) return found;
+    }
+    return visibleRegions[0] || null;
+  }, [userRegionId, pinnedRegionId, visibleRegions]);
 
+  // Arcs data connecting home region to all other visible regions
+  const arcsData = useMemo(() => {
+    if (!homeRegion) return [];
+    return visibleRegions
+      .filter((r) => r.id !== homeRegion.id)
+      .map((r) => {
+        const isTargetPinned = r.id === pinnedRegionId;
+        return {
+          startLat: homeRegion.lat,
+          startLng: homeRegion.lng,
+          endLat: r.lat,
+          endLng: r.lng,
+          color: isTargetPinned
+            ? ['rgba(245, 158, 11, 0.95)', 'rgba(56, 189, 248, 0.95)']
+            : ['rgba(212, 175, 55, 0.65)', 'rgba(56, 189, 248, 0.35)'],
+          stroke: isTargetPinned ? 1.2 : 0.6,
+          dashLength: isTargetPinned ? 0.4 : 0.25,
+          dashGap: 0.15,
+          dashAnimateTime: isTargetPinned ? 1800 : 2500,
+        };
+      });
+  }, [homeRegion, visibleRegions, pinnedRegionId]);
+
+  // Rings data for pulsing radar effect
+  const ringsData = useMemo(() => {
+    return visibleRegions.map((r) => {
+      const isPinned = r.id === pinnedRegionId;
+      const isHome = homeRegion ? r.id === homeRegion.id : false;
       return {
-        id: region.id,
-        lat: region.lat,
-        lng: region.lng,
-        city: region.city,
-        country: region.country,
-        countryCode: region.countryCode,
+        lat: r.lat,
+        lng: r.lng,
         isPinned,
-        region,
+        isHome,
       };
     });
-  }, [visibleRegions, pinnedRegionId]);
+  }, [visibleRegions, pinnedRegionId, homeRegion]);
 
-  // Initialize Globe.gl instance with Earth satellite texture
+  // City HTML markers data
+  const htmlData = useMemo(() => {
+    return visibleRegions.map((r) => {
+      const isPinned = r.id === pinnedRegionId;
+      const isHome = homeRegion ? r.id === homeRegion.id : false;
+      const timeInfo = formatTimeInZone(r.timezone, currentTime, is24Hour);
+      return {
+        region: r,
+        id: r.id,
+        lat: r.lat,
+        lng: r.lng,
+        city: r.city,
+        countryCode: r.countryCode,
+        country: r.country,
+        timeStr: timeInfo.hoursMinutes,
+        isPinned,
+        isHome,
+        altitude: isPinned ? 0.04 : 0.02,
+      };
+    });
+  }, [visibleRegions, pinnedRegionId, homeRegion, currentTime, is24Hour]);
+
+  // Initialize Globe.gl instance
   useEffect(() => {
     if (!containerRef.current || globeInstanceRef.current) return;
 
     const width = containerRef.current.clientWidth || window.innerWidth;
     const height = containerRef.current.clientHeight || window.innerHeight;
 
-    // Safe constructor resolution for Vite / ES module bundling
-    const GlobeFactory = typeof GlobeGL === 'function'
-      ? GlobeGL
-      : (GlobeGL as any).default || (window as any).Globe;
+    const GlobeFactory =
+      typeof GlobeGL === 'function'
+        ? GlobeGL
+        : (GlobeGL as any).default || (window as any).Globe;
 
     if (typeof GlobeFactory !== 'function') {
       console.error('GlobeGL factory function could not be loaded');
@@ -61,66 +118,157 @@ export const Globe: React.FC<GlobeProps> = ({
     }
 
     try {
-      const isDark = document.documentElement.classList.contains('dark');
-      // Create Globe instance attached to container element
       const globe = GlobeFactory()(containerRef.current)
         .width(width)
         .height(height)
-        .backgroundColor(isDark ? 'rgba(5, 8, 17, 1)' : 'rgba(241, 245, 249, 1)')
-        // High-resolution actual satellite map imagery texture of Earth
+        .backgroundColor('rgba(7, 10, 18, 1)')
         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-        // Topographic bump map for realistic 3D surface relief
         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-        // Atmosphere glow parameters
-        .atmosphereColor(isDark ? '#0f172a' : '#cbd5e1')
-        .atmosphereAltitude(0.15)
-        .showAtmosphere(true);
+        .atmosphereColor('#38BDF8')
+        .atmosphereAltitude(0.22)
+        .showAtmosphere(true)
+        .showGraticules(true);
 
-      // Set default fallback material color so sphere is immediately visible
-      if (globe.globeMaterial()) {
-        globe.globeMaterial().color = new THREE.Color(0x0f172a);
+      // Create Custom Solar Lighting Array
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
+      const sunLight = new THREE.DirectionalLight(0xfff8e7, 3.8);
+      sunLightRef.current = sunLight;
+
+      // Replace default camera lights with single real-time Sun light + low ambient light
+      if (typeof globe.lights === 'function') {
+        globe.lights([ambientLight, sunLight]);
       }
 
-      // Native WebGL Point Pins for Cities (Instant 0ms transition, Gold/Amber theme)
-      globe.pointsData([])
-        .pointsTransitionDuration(0)
-        .pointLat((d: any) => d.lat)
-        .pointLng((d: any) => d.lng)
-        .pointColor((d: any) => (d.isPinned ? '#F59E0B' : '#D4AF37'))
-        .pointRadius((d: any) => (d.isPinned ? 0.75 : 0.4))
-        .pointAltitude((d: any) => (d.isPinned ? 0.03 : 0.01))
-        .onPointClick((d: any) => {
-          if (d && d.region) {
-            onSelectRegion(d.region);
-          }
+      // Configure Night Lights Texture Overlay on Shadow Side
+      const textureLoader = new THREE.TextureLoader();
+      const nightTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-night.jpg');
+
+      if (globe.globeMaterial()) {
+        const mat = globe.globeMaterial();
+        mat.emissiveMap = nightTexture;
+        mat.emissive = new THREE.Color(0x666666);
+        mat.emissiveIntensity = 0.25;
+        mat.shininess = 15;
+      }
+
+      // Initial sun position calculation
+      const initialSun = getSubsolarPoint(currentTime);
+      const initialCoords = globe.getCoords ? globe.getCoords(initialSun.lat, initialSun.lng, 4) : null;
+      if (initialCoords && sunLightRef.current) {
+        sunLightRef.current.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
+      }
+
+      // Connecting Arcs between home region and world cities
+      globe
+        .arcsData([])
+        .arcStartLat((d: any) => d.startLat)
+        .arcStartLng((d: any) => d.startLng)
+        .arcEndLat((d: any) => d.endLat)
+        .arcEndLng((d: any) => d.endLng)
+        .arcColor((d: any) => d.color)
+        .arcStroke((d: any) => d.stroke)
+        .arcDashLength((d: any) => d.dashLength)
+        .arcDashGap((d: any) => d.dashGap)
+        .arcDashInitialGap(0)
+        .arcDashAnimateTime((d: any) => d.dashAnimateTime)
+        .arcAltitude((d: any) => {
+          const dLat = (d.endLat - d.startLat) * (Math.PI / 180);
+          const dLng = (d.endLng - d.startLng) * (Math.PI / 180);
+          const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+          return Math.min(0.35, Math.max(0.12, dist * 0.15));
         });
 
+      // Pulsing Wave Radar Rings
+      globe
+        .ringsData([])
+        .ringLat((d: any) => d.lat)
+        .ringLng((d: any) => d.lng)
+        .ringColor((d: any) => (t: number) => {
+          if (d.isPinned) return `rgba(245, 158, 11, ${Math.pow(1 - t, 2)})`;
+          if (d.isHome) return `rgba(56, 189, 248, ${Math.pow(1 - t, 2)})`;
+          return `rgba(212, 175, 55, ${0.4 * Math.pow(1 - t, 2)})`;
+        })
+        .ringMaxRadius((d: any) => (d.isPinned ? 5.5 : d.isHome ? 4.5 : 2.8))
+        .ringPropagationSpeed((d: any) => (d.isPinned ? 3.5 : 2.0))
+        .ringRepeatPeriod((d: any) => (d.isPinned ? 850 : 1500));
+
       // Native WebGL Crisp Country Name Labels
-      globe.labelsData(WORLD_COUNTRY_LABELS)
+      globe
+        .labelsData(WORLD_COUNTRY_LABELS)
         .labelLat((d: any) => d.lat)
         .labelLng((d: any) => d.lng)
         .labelText((d: any) => d.name)
-        .labelSize((d: any) => d.size || 0.85)
+        .labelSize((d: any) => d.size || 0.75)
         .labelDotRadius(0)
-        .labelColor(() => 'rgba(248, 250, 252, 0.65)')
+        .labelColor(() => 'rgba(248, 250, 252, 0.55)')
         .labelResolution(2)
         .labelAltitude(0.008);
 
-      // Configure Orbit Controls
+      // Custom Floating HTML Elements for City Badges
+      globe
+        .htmlElementsData([])
+        .htmlLat((d: any) => d.lat)
+        .htmlLng((d: any) => d.lng)
+        .htmlAltitude((d: any) => d.altitude)
+        .htmlElement((d: any) => {
+          const el = document.createElement('div');
+          el.className = 'globe-city-badge-wrapper';
+          el.setAttribute('data-region-id', d.id);
+
+          const pinnedClass = d.isPinned
+            ? 'border-gold-500 bg-navy-900/95 text-gold-400 shadow-[0_0_15px_rgba(245,158,11,0.5)] scale-110 z-30'
+            : d.isHome
+            ? 'border-sky-400 bg-navy-950/90 text-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.3)] z-20'
+            : 'border-white/15 bg-navy-950/80 text-slate-200 hover:border-gold-400/70 hover:scale-105 z-10';
+
+          el.innerHTML = `
+            <div class="cursor-pointer group flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-sans font-semibold tracking-wide backdrop-blur-md transition-all duration-300 ${pinnedClass}">
+              <img src="https://flagcdn.com/w40/${d.countryCode.toLowerCase()}.png" class="w-3.5 h-2.5 rounded-2xs object-cover shrink-0 opacity-90 group-hover:opacity-100" alt="${d.country}" />
+              <span class="font-medium truncate max-w-[85px]">${d.city}</span>
+              <span class="font-mono text-[11px] font-bold text-gold-400 ml-0.5">${d.timeStr}</span>
+            </div>
+          `;
+
+          el.onclick = (e) => {
+            e.stopPropagation();
+            if (d.region) {
+              onSelectRegion(d.region);
+            }
+          };
+
+          return el;
+        })
+        .htmlTransitionDuration(300);
+
+      // Orbit Controls Configuration
       const controls = globe.controls();
       controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.6;
+      controls.autoRotateSpeed = 0.45;
       controls.enableZoom = true;
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.minDistance = 150;
+      controls.maxDistance = 600;
 
-      // Default 3D point of view
-      globe.pointOfView({ lat: 20, lng: 0, altitude: 2.2 });
+      // Default POV
+      globe.pointOfView({ lat: 20, lng: 0, altitude: 2.1 });
+
+      // Click background to reset map selection
+      const globeContainer = containerRef.current;
+      const handleClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target && target.closest('.globe-city-badge-wrapper')) {
+          return;
+        }
+        onResetMap();
+      };
+      globeContainer.addEventListener('click', handleClick);
 
       globeInstanceRef.current = globe;
     } catch (err) {
       console.error('Error initializing GlobeGL:', err);
     }
 
-    // Resize handler
     const handleResize = () => {
       if (containerRef.current && globeInstanceRef.current) {
         globeInstanceRef.current
@@ -139,22 +287,37 @@ export const Globe: React.FC<GlobeProps> = ({
     };
   }, []);
 
-  // Update WebGL points and manage auto-rotation state
+  // Sync real-time solar light position using Globe's 3D coordinate utility
+  useEffect(() => {
+    const globe = globeInstanceRef.current;
+    if (!globe || !sunLightRef.current) return;
+
+    const { lat, lng } = getSubsolarPoint(currentTime);
+    const sunCoords = globe.getCoords ? globe.getCoords(lat, lng, 4) : null;
+
+    if (sunCoords) {
+      sunLightRef.current.position.set(sunCoords.x, sunCoords.y, sunCoords.z);
+    }
+  }, [currentTime]);
+
+  // Sync Arcs, Rings & HTML Elements
   useEffect(() => {
     const globe = globeInstanceRef.current;
     if (!globe) return;
 
-    globe.pointsData(cityPoints);
+    globe.arcsData(arcsData);
+    globe.ringsData(ringsData);
+    globe.htmlElementsData(htmlData);
+
     const controls = globe.controls();
 
-    // If a region is pinned, pan 3D camera smoothly to center on its location & pause rotation
     if (pinnedRegionId) {
       const pinned = visibleRegions.find((r) => r.id === pinnedRegionId);
       if (pinned) {
         const isMobile = window.innerWidth < 768;
         const targetLng = pinned.lng;
         const targetLat = pinned.lat;
-        const targetAlt = isMobile ? 0.9 : 0.65;
+        const targetAlt = isMobile ? 0.95 : 0.7;
 
         if (controls) {
           controls.autoRotate = false;
@@ -163,18 +326,19 @@ export const Globe: React.FC<GlobeProps> = ({
         globe.pointOfView({ lat: targetLat, lng: targetLng, altitude: targetAlt }, 1000);
       }
     } else {
-      // When no city is selected, keep globe revolving smoothly
       if (controls) {
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.6;
+        controls.autoRotateSpeed = 0.45;
       }
     }
-  }, [cityPoints, pinnedRegionId, visibleRegions]);
+  }, [arcsData, ringsData, htmlData, pinnedRegionId, visibleRegions]);
 
   return (
-    <div className="relative w-full h-full bg-slate-100 dark:bg-navy-950 overflow-hidden select-none">
-      {/* 3D WebGL Globe Render Container */}
+    <div className="relative w-full h-full bg-navy-950 overflow-hidden select-none">
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing z-0" />
+
+      {/* Futuristic Vignette Glow Overlay */}
+      <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/70" />
     </div>
   );
 };

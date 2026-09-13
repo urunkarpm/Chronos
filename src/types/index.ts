@@ -71,5 +71,16 @@ export interface CurrencyOption {
 
 export type ExchangeRatesMap = Record<string, number>;
 
+export interface Holiday {
+  date: string;
+  name: string;
+  type: string;
+  state_code?: string;
+  description?: string;
+  day_of_week?: string;
+  days_until?: number;
+}
+
+
 
 

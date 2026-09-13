@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   Search,
   Volume2,
@@ -19,6 +20,7 @@ import {
   Monitor,
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
+import { ChronosLogoMark } from './ChronosLogoMark';
 import { Continent, TimeRegion, MapProjection } from '../types';
 import { formatTimeInZone, playUISound } from '../utils/timeUtils';
 import { searchGlobalLocations, scoreAndSortMatches } from '../utils/locationService';
@@ -175,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           >
             <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-              <Clock className="w-6 h-6 sm:w-7 sm:h-7 text-gold-500 dark:text-gold-400" />
+              <ChronosLogoMark className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
             </div>
             <div className="min-w-0">
               <h1 className="font-serif tracking-widest text-base sm:text-xl font-black text-black dark:text-slate-100 flex items-center gap-1.5 leading-none truncate">
@@ -230,44 +232,73 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Add region to dashboard"
             className="btn-primary"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span className="hidden sm:inline">Add Location</span>
           </button>
 
-          {/* Segmented Flat Map / 3D Globe Projection Toggle Switch */}
-          <div className="hidden sm:inline-flex items-center h-9 p-0.5 bg-navy-950/80 dark:bg-navy-950/80 border border-slate-700/60 dark:border-white/10 rounded-xl shadow-inner select-none">
+          {/* Floating Tactile Glass Projection Switch (Flat Map vs 3D Globe) */}
+          <div
+            className="hidden sm:inline-flex relative h-9 p-1 bg-navy-950/70 border border-slate-700/60 rounded-xl glass-card backdrop-blur-md items-center select-none shrink-0"
+            title="Switch map projection view (Flat Map / 3D Globe)"
+          >
+            {/* Sliding Active Pill Background with Framer Motion Spring */}
+            <motion.div
+              className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-gradient-to-r from-gold-500/25 to-amber-500/15 border border-gold-400/50 pointer-events-none"
+              animate={{
+                left: mapProjection === 'flat' ? '4px' : 'calc(50%)',
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 400,
+                damping: 30,
+              }}
+            />
+
+            {/* Flat Option Segment */}
             <button
+              type="button"
               onClick={() => {
                 if (mapProjection !== 'flat') {
                   if (soundEnabled) playUISound('toggle');
                   onToggleProjection();
                 }
               }}
-              title="Flat Map View"
-              className={`h-8 flex items-center gap-1.5 px-3 rounded-lg text-xs font-sans font-bold transition-all duration-200 ${
+              className={`relative z-10 px-3 h-full text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors duration-200 ${
                 mapProjection === 'flat'
-                  ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'text-gold-300 font-extrabold'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <MapIcon className={`w-3.5 h-3.5 ${mapProjection === 'flat' ? 'text-gold-400' : 'text-slate-400'}`} />
+              <motion.div
+                animate={{ scale: mapProjection === 'flat' ? 1.15 : 1, rotate: mapProjection === 'flat' ? 0 : -10 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              >
+                <MapIcon className={`w-3.5 h-3.5 shrink-0 transition-colors ${mapProjection === 'flat' ? 'text-gold-400' : 'text-slate-400'}`} />
+              </motion.div>
               <span>Flat</span>
             </button>
+
+            {/* Globe Option Segment */}
             <button
+              type="button"
               onClick={() => {
                 if (mapProjection !== 'globe') {
                   if (soundEnabled) playUISound('toggle');
                   onToggleProjection();
                 }
               }}
-              title="3D Globe View"
-              className={`h-8 flex items-center gap-1.5 px-3 rounded-lg text-xs font-sans font-bold transition-all duration-200 ${
+              className={`relative z-10 px-3 h-full text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors duration-200 ${
                 mapProjection === 'globe'
-                  ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                  ? 'text-gold-300 font-extrabold'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Globe className={`w-3.5 h-3.5 ${mapProjection === 'globe' ? 'text-gold-400' : 'text-slate-400'}`} />
+              <motion.div
+                animate={{ scale: mapProjection === 'globe' ? 1.15 : 1, rotate: mapProjection === 'globe' ? 0 : 10 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              >
+                <Globe className={`w-3.5 h-3.5 shrink-0 transition-colors ${mapProjection === 'globe' ? 'text-gold-400' : 'text-slate-400'}`} />
+              </motion.div>
               <span>Globe</span>
             </button>
           </div>
@@ -484,39 +515,67 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {/* Segmented Flat / Globe View Toggle */}
-            <div className="col-span-2 flex items-center p-1 bg-navy-950/90 border border-slate-700/60 rounded-full select-none">
+            {/* Mobile Floating Tactile Glass Projection Switch */}
+            <div className="col-span-2 relative p-1 bg-navy-950/80 border border-slate-700/60 rounded-xl glass-card backdrop-blur-md flex items-center select-none">
+              {/* Sliding Active Pill Background with Framer Motion Spring */}
+              <motion.div
+                className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-gradient-to-r from-gold-500/25 to-amber-500/15 border border-gold-400/50 pointer-events-none"
+                animate={{
+                  left: mapProjection === 'flat' ? '4px' : 'calc(50%)',
+                }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 30,
+                }}
+              />
+
+              {/* Flat Option Segment */}
               <button
+                type="button"
                 onClick={() => {
                   if (mapProjection !== 'flat') {
                     if (soundEnabled) playUISound('toggle');
                     onToggleProjection();
                   }
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+                className={`relative z-10 flex-1 py-1.5 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 ${
                   mapProjection === 'flat'
-                    ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'text-gold-300 font-extrabold'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <MapIcon className={`w-3.5 h-3.5 ${mapProjection === 'flat' ? 'text-gold-400' : 'text-slate-400'}`} />
-                <span>Flat Map</span>
+                <motion.div
+                  animate={{ scale: mapProjection === 'flat' ? 1.15 : 1 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                >
+                  <MapIcon className={`w-4 h-4 shrink-0 ${mapProjection === 'flat' ? 'text-gold-400' : 'text-slate-400'}`} />
+                </motion.div>
+                <span>Flat Map Mode</span>
               </button>
+
+              {/* Globe Option Segment */}
               <button
+                type="button"
                 onClick={() => {
                   if (mapProjection !== 'globe') {
                     if (soundEnabled) playUISound('toggle');
                     onToggleProjection();
                   }
                 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-xs font-sans font-bold transition-all duration-200 ${
+                className={`relative z-10 flex-1 py-1.5 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 ${
                   mapProjection === 'globe'
-                    ? 'bg-gold-500/20 text-gold-400 border border-gold-500/50 shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'text-gold-300 font-extrabold'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Globe className={`w-3.5 h-3.5 ${mapProjection === 'globe' ? 'text-gold-400' : 'text-slate-400'}`} />
-                <span>3D Globe</span>
+                <motion.div
+                  animate={{ scale: mapProjection === 'globe' ? 1.15 : 1 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                >
+                  <Globe className={`w-4 h-4 shrink-0 ${mapProjection === 'globe' ? 'text-gold-400' : 'text-slate-400'}`} />
+                </motion.div>
+                <span>3D Globe Mode</span>
               </button>
             </div>
 

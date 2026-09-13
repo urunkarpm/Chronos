@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="faviconGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5D061" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#AA820A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Hourglass Frame -->
+  <polygon points="22,18 78,18 50,50 78,82 22,82 50,50" stroke="url(#faviconGoldGrad)" stroke-width="4.5" stroke-linejoin="round" fill="none" />
+
+  <!-- "C" Monogram Circle Arc -->
+  <path d="M 50 25 A 25 25 0 1 0 50 75" stroke="url(#faviconGoldGrad)" stroke-width="5" stroke-linecap="round" fill="none" />
+
+  <!-- "H" Monogram Pillar -->
+  <path d="M 68 32 L 68 68 M 50 50 L 68 50" stroke="url(#faviconGoldGrad)" stroke-width="4.5" stroke-linecap="round" fill="none" />
+
+  <!-- Clock Hands -->
+  <circle cx="50" cy="50" r="4" fill="url(#faviconGoldGrad)" />
+  <path d="M 50 50 L 37 37 M 50 50 L 63 39" stroke="url(#faviconGoldGrad)" stroke-width="4" stroke-linecap="round" />
+</svg>
