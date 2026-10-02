@@ -111,29 +111,6 @@ export const Globe: React.FC<GlobeProps> = ({
     return visibleRegions[0] || null;
   }, [userRegionId, pinnedRegionId, visibleRegions]);
 
-  // Arcs data connecting home region to all other visible regions
-  const arcsData = useMemo(() => {
-    if (!homeRegion) return [];
-    return visibleRegions
-      .filter((r) => r.id !== homeRegion.id)
-      .map((r) => {
-        const isTargetPinned = r.id === pinnedRegionId;
-        return {
-          startLat: homeRegion.lat,
-          startLng: homeRegion.lng,
-          endLat: r.lat,
-          endLng: r.lng,
-          color: isTargetPinned
-            ? ['rgba(245, 158, 11, 0.95)', 'rgba(56, 189, 248, 0.95)']
-            : ['rgba(212, 175, 55, 0.65)', 'rgba(56, 189, 248, 0.35)'],
-          stroke: isTargetPinned ? 1.2 : 0.6,
-          dashLength: isTargetPinned ? 0.4 : 0.25,
-          dashGap: 0.15,
-          dashAnimateTime: isTargetPinned ? 1800 : 2500,
-        };
-      });
-  }, [homeRegion, visibleRegions, pinnedRegionId]);
-
   // Rings data for pulsing radar effect
   const ringsData = useMemo(() => {
     return visibleRegions.map((r) => {
@@ -325,26 +302,6 @@ export const Globe: React.FC<GlobeProps> = ({
       if (initialCoords && sunLightRef.current) {
         sunLightRef.current.position.set(initialCoords.x, initialCoords.y, initialCoords.z);
       }
-
-      // Connecting Arcs between home region and world cities
-      globe
-        .arcsData([])
-        .arcStartLat((d: any) => d.startLat)
-        .arcStartLng((d: any) => d.startLng)
-        .arcEndLat((d: any) => d.endLat)
-        .arcEndLng((d: any) => d.endLng)
-        .arcColor((d: any) => d.color)
-        .arcStroke((d: any) => d.stroke)
-        .arcDashLength((d: any) => d.dashLength)
-        .arcDashGap((d: any) => d.dashGap)
-        .arcDashInitialGap(0)
-        .arcDashAnimateTime((d: any) => d.dashAnimateTime)
-        .arcAltitude((d: any) => {
-          const dLat = (d.endLat - d.startLat) * (Math.PI / 180);
-          const dLng = (d.endLng - d.startLng) * (Math.PI / 180);
-          const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-          return Math.min(0.35, Math.max(0.12, dist * 0.15));
-        });
 
       // Pulsing Wave Radar Rings
       globe
@@ -564,12 +521,11 @@ export const Globe: React.FC<GlobeProps> = ({
     }
   }, [minuteKey]);
 
-  // Sync Arcs, Rings & HTML Elements
+  // Sync Rings & HTML Elements
   useEffect(() => {
     const globe = globeInstanceRef.current;
     if (!globe) return;
 
-    globe.arcsData(arcsData);
     globe.ringsData(ringsData);
     globe.htmlElementsData(htmlData);
 
@@ -595,7 +551,7 @@ export const Globe: React.FC<GlobeProps> = ({
         controls.autoRotateSpeed = 0.45;
       }
     }
-  }, [arcsData, ringsData, htmlData, pinnedRegionId, visibleRegions]);
+  }, [ringsData, htmlData, pinnedRegionId, visibleRegions]);
 
   // 1. Calculate high-resolution 3D closed Keplerian orbital trajectory rings when satellites are enabled
   useEffect(() => {
