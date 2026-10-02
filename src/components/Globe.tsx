@@ -5,7 +5,7 @@ import { TimeRegion } from '../types';
 import { WORLD_COUNTRY_LABELS } from '../data/countryLabels';
 import { formatTimeInZone, getSubsolarPoint } from '../utils/timeUtils';
 import { SATELLITE_CATALOG } from '../data/satellites';
-import { SatelliteLiveState, SatelliteOrbitalPath } from '../types/satellite';
+import { SatelliteDefinition, SatelliteLiveState, SatelliteOrbitalPath } from '../types/satellite';
 import {
   getSatelliteLiveState,
   getSatelliteOrbitalPath,
@@ -57,14 +57,20 @@ export const Globe: React.FC<GlobeProps> = ({
   const showSatellites = externalShowSatellites !== undefined ? externalShowSatellites : internalShowSatellites;
 
   const [selectedSatelliteId, setSelectedSatelliteId] = useState<string | null>(null);
-  const [satelliteStates, setSatelliteStates] = useState<SatelliteLiveState[]>([]);
-  const [orbitalPaths, setOrbitalPaths] = useState<SatelliteOrbitalPath[]>([]);
+  const [selectedSatelliteState, setSelectedSatelliteState] = useState<SatelliteLiveState | null>(null);
+  const [hoveredSatellite, setHoveredSatellite] = useState<SatelliteDefinition | null>(null);
 
-  // Find currently selected satellite state
-  const selectedSatelliteState = useMemo(() => {
-    if (!selectedSatelliteId) return null;
-    return satelliteStates.find((s) => s.definition.id === selectedSatelliteId) || null;
-  }, [selectedSatelliteId, satelliteStates]);
+  const showSatellitesRef = useRef<boolean>(showSatellites);
+  showSatellitesRef.current = showSatellites;
+
+  const selectedSatelliteIdRef = useRef<string | null>(selectedSatelliteId);
+  selectedSatelliteIdRef.current = selectedSatelliteId;
+
+  const hoveredSatelliteRef = useRef<SatelliteDefinition | null>(null);
+  hoveredSatelliteRef.current = hoveredSatellite;
+
+  const satelliteGroupRef = useRef<THREE.Group | null>(null);
+  const satelliteMeshesRef = useRef<Map<string, THREE.Group>>(new Map());
 
   const handleToggleSatellites = useCallback((val: boolean) => {
     if (onToggleSatellites) {
@@ -77,6 +83,7 @@ export const Globe: React.FC<GlobeProps> = ({
     } catch {}
     if (!val) {
       setSelectedSatelliteId(null);
+      setSelectedSatelliteState(null);
     }
   }, [onToggleSatellites]);
 
@@ -183,6 +190,9 @@ export const Globe: React.FC<GlobeProps> = ({
       return;
     }
 
+    let handlePointerMove: ((e: MouseEvent) => void) | null = null;
+    let handleClick: ((e: MouseEvent) => void) | null = null;
+
     try {
       const globe = GlobeFactory()(containerRef.current)
         .width(width)
@@ -238,13 +248,76 @@ export const Globe: React.FC<GlobeProps> = ({
       globe.scene().add(cloudsMesh);
       cloudsMeshRef.current = cloudsMesh;
 
-      const animateClouds = () => {
+      // Realistic 3D Spacecraft Group in Three.js Scene
+      const satelliteGroup = new THREE.Group();
+      satelliteGroup.name = 'satellite_fleet_group';
+      satelliteGroup.visible = showSatellitesRef.current;
+      globe.scene().add(satelliteGroup);
+      satelliteGroupRef.current = satelliteGroup;
+
+      // Instantiate authentic 3D models for all catalog satellites
+      satelliteMeshesRef.current.clear();
+      for (const sat of SATELLITE_CATALOG) {
+        const mesh = createSatellite3DModel(sat);
+        mesh.visible = true;
+        satelliteMeshesRef.current.set(sat.id, mesh);
+        satelliteGroup.add(mesh);
+      }
+
+      // Continuous 60/120 FPS WebGL Animation Loop
+      const animateScene = () => {
+        // 1. Drifting Atmospheric Clouds
         if (cloudsMeshRef.current) {
           cloudsMeshRef.current.rotation.y += 0.00035;
         }
-        cloudsRafRef.current = requestAnimationFrame(animateClouds);
+
+        // 2. Real-Time Butter-Smooth Satellite Orbital Glide (60/120 FPS)
+        if (showSatellitesRef.current && satelliteGroupRef.current && globeInstanceRef.current) {
+          const now = new Date();
+          const nowMs = now.getTime();
+          const globe = globeInstanceRef.current;
+
+          for (const sat of SATELLITE_CATALOG) {
+            const mesh = satelliteMeshesRef.current.get(sat.id);
+            if (!mesh) continue;
+
+            const liveState = getSatelliteLiveState(sat, now);
+            if (!liveState) continue;
+
+            const coords = globe.getCoords ? globe.getCoords(liveState.lat, liveState.lng, liveState.globeAltitude) : null;
+            if (coords) {
+              mesh.position.set(coords.x, coords.y, coords.z);
+
+              // Calculate tangent forward heading direction vector (look ahead by 2 seconds)
+              const aheadDate = new Date(nowMs + 2000);
+              const aheadState = getSatelliteLiveState(sat, aheadDate);
+              if (aheadState) {
+                const aheadCoords = globe.getCoords ? globe.getCoords(aheadState.lat, aheadState.lng, aheadState.globeAltitude) : null;
+                if (aheadCoords) {
+                  mesh.lookAt(aheadCoords.x, aheadCoords.y, aheadCoords.z);
+                }
+              }
+
+              // Pulse the halo aura ring and highlight if selected or hovered
+              const isSelected = sat.id === selectedSatelliteIdRef.current;
+              const isHovered = hoveredSatelliteRef.current?.id === sat.id;
+
+              mesh.traverse((child: any) => {
+                if (child.geometry instanceof THREE.RingGeometry) {
+                  const pulse = (isSelected || isHovered ? 1.35 : 1.0) * (1 + 0.12 * Math.sin(nowMs * 0.004 + sat.noradId));
+                  child.scale.set(pulse, pulse, pulse);
+                  if (child.material) {
+                    child.material.opacity = isSelected || isHovered ? 0.95 : 0.45;
+                  }
+                }
+              });
+            }
+          }
+        }
+
+        cloudsRafRef.current = requestAnimationFrame(animateScene);
       };
-      animateClouds();
+      animateScene();
 
       // Initial sun position calculation
       const initialSun = getSubsolarPoint(currentTime);
@@ -343,31 +416,11 @@ export const Globe: React.FC<GlobeProps> = ({
         .pathPointLng((p: any) => p.lng)
         .pathPointAlt((p: any) => p.alt)
         .pathColor((d: any) => d.color)
-        .pathStroke((d: any) => (d.satelliteId === selectedSatelliteId ? 2.5 : 1.1))
-        .pathDashLength(0.08)
-        .pathDashGap(0.03)
-        .pathDashAnimateTime(14000);
-
-      // Realistic 3D Satellite Spacecraft Layer
-      globe
-        .objectsData([])
-        .objectLat((d: any) => d.lat)
-        .objectLng((d: any) => d.lng)
-        .objectAltitude((d: any) => d.globeAltitude)
-        .objectThreeObject((d: any) => createSatellite3DModel(d.definition))
-        .objectLabel((d: any) => {
-          return `
-            <div style="background: rgba(5,7,14,0.92); border: 1px solid ${d.definition.color}; border-radius: 8px; padding: 6px 10px; font-family: sans-serif; font-size: 11px; color: #f8fafc; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(8px);">
-              <div style="font-weight: bold; color: ${d.definition.color}; margin-bottom: 2px;">${d.definition.name}</div>
-              <div style="color: #94a3b8; font-family: monospace; font-size: 10px;">Alt: ${Math.round(d.altKm)} km • ${Math.round(d.velocityKmH).toLocaleString()} km/h</div>
-            </div>
-          `;
-        })
-        .onObjectClick((obj: any) => {
-          if (obj && obj.definition) {
-            setSelectedSatelliteId(obj.definition.id);
-          }
-        });
+        .pathStroke((d: any) => (d.satelliteId === selectedSatelliteIdRef.current ? 3.0 : 1.2))
+        .pathDashLength(0.06)
+        .pathDashGap(0.02)
+        .pathDashAnimateTime(16000)
+        .pathResolution(0.5);
 
       // Orbit Controls Configuration
       const controls = globe.controls();
@@ -382,15 +435,74 @@ export const Globe: React.FC<GlobeProps> = ({
       // Default POV
       globe.pointOfView({ lat: 20, lng: 0, altitude: 2.1 });
 
-      // Click background to reset map selection
+      // Raycasting for interactive satellite inspection and hovering
+      const raycaster = new THREE.Raycaster();
+      raycaster.params.Line = { threshold: 2 };
+      const mouse = new THREE.Vector2();
+
+      const getIntersectedSatellite = (event: MouseEvent): SatelliteDefinition | null => {
+        if (!containerRef.current || !globeInstanceRef.current || !satelliteGroupRef.current) return null;
+        if (!showSatellitesRef.current) return null;
+
+        const rect = containerRef.current.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        const camera = globeInstanceRef.current.camera();
+        if (!camera) return null;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(satelliteGroupRef.current.children, true);
+        if (intersects.length > 0) {
+          let curr: THREE.Object3D | null = intersects[0].object;
+          while (curr && !(curr as any).__satelliteData && curr.parent && curr !== satelliteGroupRef.current) {
+            curr = curr.parent;
+          }
+          if (curr && (curr as any).__satelliteData) {
+            return (curr as any).__satelliteData as SatelliteDefinition;
+          }
+        }
+        return null;
+      };
+
       const globeContainer = containerRef.current;
-      const handleClick = (e: MouseEvent) => {
+
+        handlePointerMove = (e: MouseEvent) => {
+        const sat = getIntersectedSatellite(e);
+        if (sat) {
+          if (containerRef.current) containerRef.current.style.cursor = 'pointer';
+          setHoveredSatellite(sat);
+        } else {
+          if (hoveredSatelliteRef.current) {
+            setHoveredSatellite(null);
+            if (containerRef.current) containerRef.current.style.cursor = 'grab';
+          }
+        }
+      };
+
+      handleClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (target && (target.closest('.globe-city-badge-wrapper') || target.closest('.globe-satellite-toggle') || target.closest('.globe-hud-container'))) {
+        if (
+          target &&
+          (target.closest('.globe-city-badge-wrapper') ||
+            target.closest('.globe-satellite-toggle') ||
+            target.closest('.globe-hud-container') ||
+            target.closest('.globe-satellite-tooltip'))
+        ) {
           return;
         }
+
+        const sat = getIntersectedSatellite(e);
+        if (sat) {
+          e.stopPropagation();
+          setSelectedSatelliteId(sat.id);
+          return;
+        }
+
         onResetMap();
       };
+
+      globeContainer.addEventListener('mousemove', handlePointerMove);
       globeContainer.addEventListener('click', handleClick);
 
       globeInstanceRef.current = globe;
@@ -409,10 +521,22 @@ export const Globe: React.FC<GlobeProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (containerRef.current) {
+        if (handlePointerMove) containerRef.current.removeEventListener('mousemove', handlePointerMove);
+        if (handleClick) containerRef.current.removeEventListener('click', handleClick);
+      }
       if (cloudsRafRef.current) {
         cancelAnimationFrame(cloudsRafRef.current);
       }
       if (globeInstanceRef.current) {
+        if (satelliteGroupRef.current) {
+          try {
+            globeInstanceRef.current.scene().remove(satelliteGroupRef.current);
+            satelliteGroupRef.current.clear();
+          } catch (e) {}
+          satelliteGroupRef.current = null;
+        }
+        satelliteMeshesRef.current.clear();
         if (cloudsMeshRef.current) {
           try {
             globeInstanceRef.current.scene().remove(cloudsMeshRef.current);
@@ -473,61 +597,60 @@ export const Globe: React.FC<GlobeProps> = ({
     }
   }, [arcsData, ringsData, htmlData, pinnedRegionId, visibleRegions]);
 
-  // Calculate smooth 3D closed Keplerian orbital trajectory rings when satellites are enabled
-  useEffect(() => {
-    if (!showSatellites) {
-      setOrbitalPaths([]);
-      return;
-    }
-
-    const updatePaths = () => {
-      const now = new Date();
-      const paths = SATELLITE_CATALOG.map((sat) =>
-        getSatelliteOrbitalPath(sat, now, 120)
-      ).filter(Boolean) as SatelliteOrbitalPath[];
-      setOrbitalPaths(paths);
-    };
-
-    updatePaths();
-    // Refresh orbital rings every 10 seconds to lock with Earth's sidereal rotation
-    const interval = setInterval(updatePaths, 10000);
-    return () => clearInterval(interval);
-  }, [showSatellites]);
-
-  // Propagate real-time satellite geodetic coordinates, speed and eclipse every second
-  useEffect(() => {
-    if (!showSatellites) {
-      setSatelliteStates([]);
-      return;
-    }
-
-    const updateSatellites = () => {
-      const now = new Date();
-      const states = SATELLITE_CATALOG.map((sat) =>
-        getSatelliteLiveState(sat, now)
-      ).filter(Boolean) as SatelliteLiveState[];
-      setSatelliteStates(states);
-    };
-
-    updateSatellites();
-    const interval = setInterval(updateSatellites, 1000);
-    return () => clearInterval(interval);
-  }, [showSatellites]);
-
-  // Sync satellite objects and paths with Globe instance
+  // 1. Calculate high-resolution 3D closed Keplerian orbital trajectory rings when satellites are enabled
   useEffect(() => {
     const globe = globeInstanceRef.current;
     if (!globe) return;
 
-    if (showSatellites) {
-      globe.pathStroke((d: any) => (d.satelliteId === selectedSatelliteId ? 2.5 : 1.1));
-      globe.pathsData(orbitalPaths);
-      globe.objectsData(satelliteStates);
-    } else {
+    if (!showSatellites) {
       globe.pathsData([]);
-      globe.objectsData([]);
+      if (satelliteGroupRef.current) {
+        satelliteGroupRef.current.visible = false;
+      }
+      return;
     }
-  }, [showSatellites, satelliteStates, orbitalPaths, selectedSatelliteId]);
+
+    if (satelliteGroupRef.current) {
+      satelliteGroupRef.current.visible = true;
+    }
+
+    // High-resolution 360-point Keplerian closed orbits
+    // Generated once per toggle to preserve uninterrupted GPU dash animation without stutter
+    const now = new Date();
+    const paths = SATELLITE_CATALOG.map((sat) =>
+      getSatelliteOrbitalPath(sat, now, 360)
+    ).filter(Boolean) as SatelliteOrbitalPath[];
+
+    globe.pathsData(paths);
+  }, [showSatellites]);
+
+  // 2. Dynamically highlight active satellite orbital path without rebuilding geometry
+  useEffect(() => {
+    const globe = globeInstanceRef.current;
+    if (!globe || !showSatellites) return;
+
+    globe.pathStroke((d: any) => (d.satelliteId === selectedSatelliteId ? 3.0 : 1.2));
+  }, [selectedSatelliteId, showSatellites]);
+
+  // 3. Keep live telemetry state updated for selected satellite HUD numbers
+  useEffect(() => {
+    if (!showSatellites || !selectedSatelliteId) {
+      setSelectedSatelliteState(null);
+      return;
+    }
+
+    const sat = SATELLITE_CATALOG.find((s) => s.id === selectedSatelliteId);
+    if (!sat) return;
+
+    const updateHud = () => {
+      const state = getSatelliteLiveState(sat, new Date());
+      setSelectedSatelliteState(state);
+    };
+
+    updateHud();
+    const timer = setInterval(updateHud, 1000);
+    return () => clearInterval(timer);
+  }, [showSatellites, selectedSatelliteId]);
 
   return (
     <div className="relative w-full h-full bg-navy-950 overflow-hidden select-none">
@@ -535,6 +658,21 @@ export const Globe: React.FC<GlobeProps> = ({
 
       {/* Futuristic Vignette Glow Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/70" />
+
+      {/* Sleek Floating Hover Tag for Satellites */}
+      {showSatellites && hoveredSatellite && !selectedSatelliteState && (
+        <div className="globe-satellite-tooltip absolute top-20 sm:top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+          <div className="glass-panel-gold rounded-full px-3.5 py-1.5 border border-sky-400/50 text-[11px] font-sans font-semibold text-slate-100 flex items-center gap-2 shadow-[0_0_25px_rgba(56,189,248,0.35)] backdrop-blur-md">
+            <span className="text-xs">🛰️</span>
+            <span className="font-bold tracking-wide" style={{ color: hoveredSatellite.color }}>
+              {hoveredSatellite.name}
+            </span>
+            <span className="text-slate-400 font-mono text-[10px]">
+              • {hoveredSatellite.orbitType} • Click to Inspect
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* 🛰️ Satellite Fleet Toggle Control (Fallback if not controlled externally) */}
       {!onToggleSatellites && (
@@ -564,7 +702,10 @@ export const Globe: React.FC<GlobeProps> = ({
         <div className="globe-hud-container">
           <SatelliteTelemetryHUD
             satelliteState={selectedSatelliteState}
-            onClose={() => setSelectedSatelliteId(null)}
+            onClose={() => {
+              setSelectedSatelliteId(null);
+              setSelectedSatelliteState(null);
+            }}
             onFocusSatellite={handleFocusSatellite}
             onSelectSatelliteId={(id) => setSelectedSatelliteId(id)}
           />

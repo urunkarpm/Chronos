@@ -103,7 +103,7 @@ export function getSatelliteLiveState(sat: SatelliteDefinition, date: Date): Sat
 export function getSatelliteOrbitalPath(
   sat: SatelliteDefinition,
   date: Date,
-  pointsCount: number = 120
+  pointsCount: number = 360
 ): SatelliteOrbitalPath | null {
   const satrec = getSatrec(sat);
   if (!satrec) return null;
