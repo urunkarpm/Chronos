@@ -20,6 +20,9 @@ interface MapProps {
   mapTheme?: MapTileTheme;
   onToggleMapTheme?: (theme: MapTileTheme) => void;
   soundEnabled?: boolean;
+  showSatellites?: boolean;
+  onToggleSatellites?: (val: boolean) => void;
+  isExploreMode?: boolean;
 }
 
 const TRANSPARENT_TILE_FALLBACK =
@@ -74,6 +77,9 @@ export const MapComponent: React.FC<MapProps> = ({
   mapTheme = 'satellite',
   onToggleMapTheme,
   soundEnabled = true,
+  showSatellites,
+  onToggleSatellites,
+  isExploreMode = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -489,7 +495,7 @@ export const MapComponent: React.FC<MapProps> = ({
         <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/60" />
 
         {/* Floating Map Theme Switcher in Flat Map Mode */}
-        {onToggleMapTheme && (
+        {!isExploreMode && onToggleMapTheme && (
           <div className="absolute top-[72px] sm:top-[76px] left-3 sm:left-6 z-20 pointer-events-auto animate-in fade-in duration-300">
             <div className="flex items-center p-0.5 sm:p-1 bg-navy-950/85 backdrop-blur-md border border-slate-700/60 rounded-xl shadow-xl">
               <button
@@ -552,6 +558,9 @@ export const MapComponent: React.FC<MapProps> = ({
           onResetMap={onResetMap}
           is24Hour={is24Hour}
           currentTime={currentTime}
+          showSatellites={showSatellites}
+          onToggleSatellites={onToggleSatellites}
+          isExploreMode={isExploreMode}
         />
       </motion.div>
     </div>

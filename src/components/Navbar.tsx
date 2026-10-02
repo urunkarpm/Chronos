@@ -18,6 +18,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Maximize2,
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
 import { ChronosLogoMark } from './ChronosLogoMark';
@@ -47,6 +48,10 @@ interface NavbarProps {
   onSelectCurrency: (currencyCode: string) => void;
   onAutoDetectLocation?: () => void;
   isAutoDetecting?: boolean;
+  showSatellites?: boolean;
+  onToggleSatellites?: () => void;
+  isExploreMode?: boolean;
+  onToggleExploreMode?: () => void;
 }
 
 
@@ -69,6 +74,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectCurrency,
   onAutoDetectLocation,
   isAutoDetecting = false,
+  showSatellites = true,
+  onToggleSatellites,
+  isExploreMode = false,
+  onToggleExploreMode,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TimeRegion[]>([]);
@@ -287,6 +296,47 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Globe</span>
             </button>
           </div>
+
+          {/* Satellite Fleet Toggle in Navbar when in Globe Mode */}
+          {mapProjection === 'globe' && onToggleSatellites && (
+            <button
+              type="button"
+              onClick={() => {
+                if (soundEnabled) playUISound('toggle');
+                onToggleSatellites();
+              }}
+              className={`hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-semibold backdrop-blur-md transition-all duration-200 select-none ${
+                showSatellites
+                  ? 'bg-navy-950/90 border-sky-400/60 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
+                  : 'bg-navy-950/70 border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+              }`}
+              title={showSatellites ? 'Hide Orbital Satellites (ISS, GPS, Hubble)' : 'Show Orbital Satellites (ISS, GPS, Hubble)'}
+            >
+              <span className="text-xs">🛰️</span>
+              <span className="hidden md:inline">Satellites</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  showSatellites ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-slate-600'
+                }`}
+              />
+            </button>
+          )}
+
+          {/* Explore / Zen Map Mode Button */}
+          {onToggleExploreMode && (
+            <button
+              type="button"
+              onClick={() => {
+                if (soundEnabled) playUISound('click');
+                onToggleExploreMode();
+              }}
+              className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-700/60 bg-navy-950/70 text-slate-300 hover:text-gold-300 hover:border-gold-500/50 text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-sm select-none"
+              title="Explore Mode: Hide all UI to freely explore full-screen Map & Globe"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-gold-400 shrink-0" />
+              <span className="hidden md:inline">Explore</span>
+            </button>
+          )}
 
           {/* Desktop Currency Selector Toggle */}
           <div className="relative hidden sm:block" ref={currencyDropdownRef}>
@@ -550,6 +600,51 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>3D Globe Mode</span>
               </button>
             </div>
+
+            {/* Mobile Satellites Toggle (When in Globe Mode) */}
+            {mapProjection === 'globe' && onToggleSatellites && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (soundEnabled) playUISound('toggle');
+                  onToggleSatellites();
+                }}
+                className={`btn-secondary w-full justify-between ${
+                  showSatellites ? 'border-sky-400/50 text-sky-300' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>🛰️</span>
+                  <span>Satellites Tracking</span>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    showSatellites ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {showSatellites ? 'ACTIVE' : 'OFF'}
+                </span>
+              </button>
+            )}
+
+            {/* Mobile Explore Map Mode */}
+            {onToggleExploreMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (soundEnabled) playUISound('click');
+                  setIsMobileMenuOpen(false);
+                  onToggleExploreMode();
+                }}
+                className="btn-secondary w-full justify-between border-gold-500/30 text-gold-300"
+              >
+                <div className="flex items-center gap-2">
+                  <Maximize2 className="w-3.5 h-3.5 text-gold-400" />
+                  <span>Explore Mode (Hide UI)</span>
+                </div>
+                <span className="text-[10px] text-gold-400/80 font-bold uppercase tracking-wider">FULLSCREEN</span>
+              </button>
+            )}
 
             {/* Sound Toggle */}
             <button

@@ -21,6 +21,9 @@ interface GlobeProps {
   onResetMap: () => void;
   is24Hour: boolean;
   currentTime: Date;
+  showSatellites?: boolean;
+  onToggleSatellites?: (val: boolean) => void;
+  isExploreMode?: boolean;
 }
 
 export const Globe: React.FC<GlobeProps> = ({
@@ -31,6 +34,9 @@ export const Globe: React.FC<GlobeProps> = ({
   onResetMap,
   is24Hour,
   currentTime,
+  showSatellites: externalShowSatellites,
+  onToggleSatellites,
+  isExploreMode = false,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const globeInstanceRef = useRef<any>(null);
@@ -38,8 +44,8 @@ export const Globe: React.FC<GlobeProps> = ({
   const cloudsMeshRef = useRef<THREE.Mesh | null>(null);
   const cloudsRafRef = useRef<number | null>(null);
 
-  // Satellite visibility & tracking state (persisted across sessions)
-  const [showSatellites, setShowSatellites] = useState<boolean>(() => {
+  // Satellite visibility & tracking state (controlled from App/Navbar or persisted fallback)
+  const [internalShowSatellites, setInternalShowSatellites] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('chronos_show_satellites');
       return saved !== null ? saved === 'true' : true;
@@ -47,6 +53,8 @@ export const Globe: React.FC<GlobeProps> = ({
       return true;
     }
   });
+
+  const showSatellites = externalShowSatellites !== undefined ? externalShowSatellites : internalShowSatellites;
 
   const [selectedSatelliteId, setSelectedSatelliteId] = useState<string | null>(null);
   const [satelliteStates, setSatelliteStates] = useState<SatelliteLiveState[]>([]);
@@ -59,14 +67,18 @@ export const Globe: React.FC<GlobeProps> = ({
   }, [selectedSatelliteId, satelliteStates]);
 
   const handleToggleSatellites = useCallback((val: boolean) => {
-    setShowSatellites(val);
+    if (onToggleSatellites) {
+      onToggleSatellites(val);
+    } else {
+      setInternalShowSatellites(val);
+    }
     try {
       localStorage.setItem('chronos_show_satellites', String(val));
     } catch {}
     if (!val) {
       setSelectedSatelliteId(null);
     }
-  }, []);
+  }, [onToggleSatellites]);
 
   const handleFocusSatellite = useCallback((satState: SatelliteLiveState) => {
     const globe = globeInstanceRef.current;
@@ -524,26 +536,28 @@ export const Globe: React.FC<GlobeProps> = ({
       {/* Futuristic Vignette Glow Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/70" />
 
-      {/* 🛰️ Satellite Fleet Toggle Control (Top-Left, clear of Holiday Calendar and Pinned Drawer) */}
-      <div className="globe-satellite-toggle absolute top-[72px] sm:top-[76px] left-3 sm:left-6 z-30 flex items-center gap-2 pointer-events-auto">
-        <button
-          onClick={() => handleToggleSatellites(!showSatellites)}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-xl active:scale-95 ${
-            showSatellites
-              ? 'bg-navy-950/90 border-sky-400/60 text-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
-              : 'bg-navy-950/80 border-slate-700/80 text-slate-400 hover:text-slate-200 hover:border-slate-600'
-          }`}
-          title={showSatellites ? 'Hide Orbital Satellites' : 'Show Orbital Satellites (ISS, GPS, Hubble)'}
-        >
-          <span className="text-sm">🛰️</span>
-          <span className="tracking-wide">Satellites</span>
-          <span
-            className={`w-2 h-2 rounded-full transition-colors ${
-              showSatellites ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-600'
+      {/* 🛰️ Satellite Fleet Toggle Control (Fallback if not controlled externally) */}
+      {!onToggleSatellites && (
+        <div className="globe-satellite-toggle absolute top-[72px] sm:top-[76px] left-3 sm:left-6 z-30 flex items-center gap-2 pointer-events-auto">
+          <button
+            onClick={() => handleToggleSatellites(!showSatellites)}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-xl active:scale-95 ${
+              showSatellites
+                ? 'bg-navy-950/90 border-sky-400/60 text-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
+                : 'bg-navy-950/80 border-slate-700/80 text-slate-400 hover:text-slate-200 hover:border-slate-600'
             }`}
-          />
-        </button>
-      </div>
+            title={showSatellites ? 'Hide Orbital Satellites' : 'Show Orbital Satellites (ISS, GPS, Hubble)'}
+          >
+            <span className="text-sm">🛰️</span>
+            <span className="tracking-wide">Satellites</span>
+            <span
+              className={`w-2 h-2 rounded-full transition-colors ${
+                showSatellites ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-600'
+              }`}
+            />
+          </button>
+        </div>
+      )}
 
       {/* Satellite Telemetry HUD Popover */}
       {showSatellites && selectedSatelliteState && (

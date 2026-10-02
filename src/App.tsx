@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Compass } from 'lucide-react';
+import { Compass, Maximize2, Minimize2, Globe as GlobeIcon, Map as MapIcon } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Map } from './components/Map';
 import { TimeTile } from './components/TimeTile';
@@ -19,6 +19,7 @@ const STORAGE_ACTIVE_REGION_IDS = 'chronos_active_region_ids';
 const STORAGE_TEMP_UNIT = 'chronos_temp_unit';
 const STORAGE_HOME_CURRENCY = 'chronos_home_currency';
 const STORAGE_MAP_THEME = 'chronos_map_theme';
+const STORAGE_SHOW_SATELLITES = 'chronos_show_satellites';
 
 export function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -57,6 +58,16 @@ export function App() {
   const [userStateCode, setUserStateCode] = useState<string | null>(null);
   const [userRegionId, setUserRegionId] = useState<string | null>(null);
 
+  // Satellite Fleet & Fullscreen Zen Explore Mode
+  const [showSatellites, setShowSatellites] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_SHOW_SATELLITES);
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {}
+    return true; // Active by default in Globe view
+  });
+  const [isExploreMode, setIsExploreMode] = useState<boolean>(false);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_TEMP_UNIT, tempUnit);
@@ -74,6 +85,12 @@ export function App() {
       localStorage.setItem(STORAGE_MAP_THEME, mapTheme);
     } catch (e) {}
   }, [mapTheme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_SHOW_SATELLITES, JSON.stringify(showSatellites));
+    } catch (e) {}
+  }, [showSatellites]);
 
   // Enforce dark mode permanently
   useEffect(() => {
@@ -202,8 +219,12 @@ export function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isAddModalOpen) setIsAddModalOpen(false);
-        else if (pinnedRegionId) {
+        if (isExploreMode) {
+          if (soundEnabled) playUISound('click');
+          setIsExploreMode(false);
+        } else if (isAddModalOpen) {
+          setIsAddModalOpen(false);
+        } else if (pinnedRegionId) {
           if (soundEnabled) playUISound('zoom');
           setPinnedRegionId(null);
         }
@@ -211,7 +232,7 @@ export function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pinnedRegionId, isAddModalOpen, soundEnabled]);
+  }, [isExploreMode, pinnedRegionId, isAddModalOpen, soundEnabled]);
 
   // Persist custom regions to localStorage whenever allRegions changes
   useEffect(() => {
@@ -295,6 +316,14 @@ export function App() {
     setPinnedRegionId((prev) => (prev === id ? null : prev));
   }, []);
 
+  const handleToggleSatellites = useCallback((val?: boolean) => {
+    setShowSatellites((prev) => (typeof val === 'boolean' ? val : !prev));
+  }, []);
+
+  const handleToggleExploreMode = useCallback(() => {
+    setIsExploreMode((prev) => !prev);
+  }, []);
+
   return (
     <div className="fixed inset-0 w-full h-full h-[100dvh] bg-navy-950 text-slate-100 font-sans overscroll-none select-none transition-colors duration-300">
       {/* 100% Viewport Interactive Satellite Map Layer */}
@@ -313,11 +342,20 @@ export function App() {
           mapTheme={mapTheme}
           onToggleMapTheme={setMapTheme}
           soundEnabled={soundEnabled}
+          showSatellites={showSatellites}
+          onToggleSatellites={handleToggleSatellites}
+          isExploreMode={isExploreMode}
         />
       </div>
 
       {/* Floating Apple VisionOS / iOS 18 Liquid Glass Top Island */}
-      <div className="fixed top-2 sm:top-4 inset-x-2 sm:inset-x-6 z-30 max-w-7xl mx-auto pointer-events-auto">
+      <div
+        className={`fixed top-2 sm:top-4 inset-x-2 sm:inset-x-6 z-30 max-w-7xl mx-auto transition-all duration-500 transform ${
+          isExploreMode
+            ? '-translate-y-[150%] opacity-0 pointer-events-none'
+            : 'translate-y-0 opacity-100 pointer-events-auto'
+        }`}
+      >
         <Navbar
           allRegions={allRegions}
           selectedContinent={selectedContinent}
@@ -336,14 +374,122 @@ export function App() {
           onSelectCurrency={setHomeCurrency}
           onAutoDetectLocation={handleAutoDetectLocation}
           isAutoDetecting={isAutoDetecting}
+          showSatellites={showSatellites}
+          onToggleSatellites={handleToggleSatellites}
+          isExploreMode={isExploreMode}
+          onToggleExploreMode={handleToggleExploreMode}
         />
       </div>
+
+      {/* Floating Zen / Explore Mode HUD Bar */}
+      {isExploreMode && (
+        <div className="fixed top-4 inset-x-3 sm:inset-x-6 z-40 max-w-xl mx-auto pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="glass-panel-gold rounded-full px-3 sm:px-4 py-2 border border-gold-500/30 shadow-[0_10px_35px_rgba(0,0,0,0.6)] backdrop-blur-xl flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500"></span>
+              </span>
+              <span className="font-serif font-black tracking-wider text-gold-300 text-[11px] sm:text-xs uppercase hidden xs:inline">
+                Explore Mode
+              </span>
+
+              {/* Projection Switcher */}
+              <div className="flex items-center bg-navy-950/80 p-0.5 rounded-full border border-slate-700/60 ml-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (soundEnabled) playUISound('toggle');
+                    setMapProjection('flat');
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all flex items-center gap-1 ${
+                    mapProjection === 'flat'
+                      ? 'bg-gold-500 text-navy-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <MapIcon className="w-3 h-3" />
+                  <span className="hidden sm:inline">Flat</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (soundEnabled) playUISound('toggle');
+                    setMapProjection('globe');
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all flex items-center gap-1 ${
+                    mapProjection === 'globe'
+                      ? 'bg-gold-500 text-navy-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <GlobeIcon className="w-3 h-3" />
+                  <span className="hidden sm:inline">Globe</span>
+                </button>
+              </div>
+
+              {/* Satellites Toggle (When Globe is active) */}
+              {mapProjection === 'globe' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (soundEnabled) playUISound('toggle');
+                    handleToggleSatellites();
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all flex items-center gap-1.5 border ${
+                    showSatellites
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-400/50 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                      : 'bg-navy-950/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
+                  }`}
+                  title="Toggle Satellites fleet and Keplerian orbits"
+                >
+                  <span>🛰️</span>
+                  <span className="hidden sm:inline">Satellites</span>
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      showSatellites ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-slate-600'
+                    }`}
+                  />
+                </button>
+              )}
+
+              {/* Map Theme Toggle (When Flat Map is active) */}
+              {mapProjection === 'flat' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (soundEnabled) playUISound('toggle');
+                    setMapTheme((prev) => (prev === 'satellite' ? 'dark' : 'satellite'));
+                  }}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-navy-950/80 text-slate-300 hover:text-gold-300 border border-slate-700/60 transition-all flex items-center gap-1"
+                >
+                  <span>{mapTheme === 'satellite' ? '🛰️ Imagery' : '🌑 Midnight'}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Exit Explore Mode Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (soundEnabled) playUISound('click');
+                setIsExploreMode(false);
+              }}
+              className="px-3 py-1 rounded-full bg-gold-500/20 hover:bg-gold-500 text-gold-300 hover:text-navy-950 font-bold border border-gold-500/40 transition-all flex items-center gap-1.5 shrink-0"
+              title="Exit Explore Mode (or press Esc)"
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
+              <span>Exit <kbd className="hidden sm:inline text-[9px] opacity-75 font-mono">Esc</kbd></span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Timezone Tiles Overlay - Horizontal Swipe Deck on Mobile, Responsive Grid on Desktop */}
       <div
         className={`fixed inset-x-0 bottom-[max(6px,calc(6px+env(safe-area-inset-bottom)))] sm:bottom-8 z-20 px-3 sm:px-6 transition-all duration-500 transform ${
-          pinnedRegionId
-            ? 'translate-y-[120%] opacity-0 pointer-events-none'
+          pinnedRegionId || isExploreMode
+            ? 'translate-y-[130%] opacity-0 pointer-events-none'
             : 'translate-y-0 opacity-100 pointer-events-auto'
         }`}
       >
@@ -413,7 +559,13 @@ export function App() {
       )}
 
       {/* Floating Holidays Sidebar Container - Inline with Top Nav and end of last tile in max-w-7xl */}
-      <div className="fixed top-2 sm:top-4 inset-x-2 sm:inset-x-6 z-20 max-w-7xl mx-auto pointer-events-none flex justify-end">
+      <div
+        className={`fixed top-2 sm:top-4 inset-x-2 sm:inset-x-6 z-20 max-w-7xl mx-auto flex justify-end transition-all duration-500 transform ${
+          pinnedRegionId || isExploreMode
+            ? 'translate-x-[150%] opacity-0 pointer-events-none'
+            : 'translate-x-0 opacity-100 pointer-events-none'
+        }`}
+      >
         <HolidaysSidebar
           userCountryCode={userCountryCode}
           userStateCode={userStateCode}
