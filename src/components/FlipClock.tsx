@@ -79,17 +79,17 @@ export const FlipClock: React.FC<FlipClockProps> = memo(({
   const [prevParts, setPrevParts] = useState(activeParts);
 
   useEffect(() => {
-    if (
-      activeParts.h !== prevParts.h ||
-      activeParts.m !== prevParts.m ||
-      activeParts.s !== prevParts.s
-    ) {
+    const hasChanged = showSeconds
+      ? activeParts.h !== prevParts.h || activeParts.m !== prevParts.m || activeParts.s !== prevParts.s
+      : activeParts.h !== prevParts.h || activeParts.m !== prevParts.m;
+
+    if (hasChanged) {
       const timer = setTimeout(() => {
         setPrevParts(activeParts);
-      }, 550);
+      }, 380);
       return () => clearTimeout(timer);
     }
-  }, [activeParts.h, activeParts.m, activeParts.s, prevParts]);
+  }, [activeParts.h, activeParts.m, activeParts.s, showSeconds, prevParts]);
 
   const isInline = variant === 'inline' || size === 'sm' || className.includes('bg-transparent');
 

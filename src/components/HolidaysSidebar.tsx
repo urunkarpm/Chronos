@@ -319,7 +319,7 @@ export function HolidaysSidebar({
       {/* Minimal, sophisticated Apple VisionOS glassmorphism style */}
       {/* ========================================================= */}
       <div
-        className={`hidden sm:block pointer-events-auto mt-20 lg:mt-20 transition-all duration-500 transform ${
+        className={`hidden sm:block pointer-events-auto mt-20 lg:mt-20 transition-transform transition-opacity duration-500 ease-out transform ${
           pinnedRegionId
             ? 'translate-x-[150%] opacity-0 pointer-events-none'
             : 'translate-x-0 opacity-100'

@@ -78,6 +78,9 @@ export const Globe: React.FC<GlobeProps> = ({
     });
   }, [visibleRegions, pinnedRegionId, homeRegion]);
 
+  // Minute key prevents destroying and re-mounting 3D HTML marker elements on every 1-second tick
+  const minuteKey = `${currentTime.getHours()}:${currentTime.getMinutes()}-${is24Hour}`;
+
   // City HTML markers data
   const htmlData = useMemo(() => {
     return visibleRegions.map((r) => {
@@ -98,7 +101,7 @@ export const Globe: React.FC<GlobeProps> = ({
         altitude: isPinned ? 0.04 : 0.02,
       };
     });
-  }, [visibleRegions, pinnedRegionId, homeRegion, currentTime, is24Hour]);
+  }, [visibleRegions, pinnedRegionId, homeRegion, minuteKey]);
 
   // Initialize Globe.gl instance
   useEffect(() => {
@@ -298,7 +301,7 @@ export const Globe: React.FC<GlobeProps> = ({
     if (sunCoords) {
       sunLightRef.current.position.set(sunCoords.x, sunCoords.y, sunCoords.z);
     }
-  }, [currentTime]);
+  }, [minuteKey]);
 
   // Sync Arcs, Rings & HTML Elements
   useEffect(() => {

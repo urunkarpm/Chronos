@@ -244,16 +244,16 @@ export const MapComponent: React.FC<MapProps> = ({
         const newCenterPoint = L.point(containerPoint.x + shiftX, containerPoint.y + shiftY);
         const newCenterLatLng = map.unproject(newCenterPoint, targetZoom);
 
-        // Fly directly to newCenterLatLng with ultra-fast response
+        // Fly smoothly to newCenterLatLng with natural cinematic easing
         map.flyTo(newCenterLatLng, targetZoom, {
-          duration: 0.65,
-          easeLinearity: 0.1,
+          duration: 0.85,
+          easeLinearity: 0.25,
           animate: true,
         });
       } else {
         map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, {
-          duration: 0.65,
-          easeLinearity: 0.1,
+          duration: 0.85,
+          easeLinearity: 0.25,
           animate: true,
         });
       }
@@ -292,6 +292,9 @@ export const MapComponent: React.FC<MapProps> = ({
       });
     }
   }, [mapTheme]);
+
+  // 30-second interval key to eliminate CPU-intensive SVG path recalculations on every second
+  const terminatorStepKey = Math.floor(currentTime.getTime() / 30000);
 
   // Live real-time solar day/night terminator curve overlay
   useEffect(() => {
@@ -343,7 +346,7 @@ export const MapComponent: React.FC<MapProps> = ({
     } catch (err) {
       console.error('Terminator render error:', err);
     }
-  }, [currentTime, mapProjection, mapTheme]);
+  }, [terminatorStepKey, mapProjection, mapTheme]);
 
   // Render dynamic Leaflet HTML Markers for each visible region
   useEffect(() => {
@@ -472,14 +475,14 @@ export const MapComponent: React.FC<MapProps> = ({
         initial={false}
         animate={{
           opacity: mapProjection === 'flat' ? 1 : 0,
-          scale: mapProjection === 'flat' ? 1 : 1.08,
-          filter: mapProjection === 'flat' ? 'blur(0px)' : 'blur(6px)',
+          scale: mapProjection === 'flat' ? 1 : 1.04,
           pointerEvents: mapProjection === 'flat' ? 'auto' : 'none',
         }}
         transition={{
-          duration: 0.5,
-          ease: [0.25, 0.1, 0.25, 1.0],
+          duration: 0.45,
+          ease: [0.16, 1, 0.3, 1],
         }}
+        style={{ willChange: 'opacity, transform' }}
       >
         <div ref={mapContainerRef} className="w-full h-full" />
         {/* Ambient Glow Overlay for Flat Map */}
@@ -532,14 +535,14 @@ export const MapComponent: React.FC<MapProps> = ({
         initial={false}
         animate={{
           opacity: mapProjection === 'globe' ? 1 : 0,
-          scale: mapProjection === 'globe' ? 1 : 0.92,
-          filter: mapProjection === 'globe' ? 'blur(0px)' : 'blur(6px)',
+          scale: mapProjection === 'globe' ? 1 : 0.96,
           pointerEvents: mapProjection === 'globe' ? 'auto' : 'none',
         }}
         transition={{
-          duration: 0.5,
-          ease: [0.25, 0.1, 0.25, 1.0],
+          duration: 0.45,
+          ease: [0.16, 1, 0.3, 1],
         }}
+        style={{ willChange: 'opacity, transform' }}
       >
         <Globe
           visibleRegions={visibleRegions}

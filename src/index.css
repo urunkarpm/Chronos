@@ -291,38 +291,22 @@
   pointer-events: none;
 }
 
-/* Authentic Solari Split-Flap Departure Board Card 3D Animations */
+/* Authentic Solari Split-Flap Departure Board Card 3D Animations (120Hz GPU Composited) */
 @keyframes splitFlapTopFold {
   0% {
-    transform: perspective(600px) rotateX(0deg);
-    filter: brightness(1);
-  }
-  50% {
-    transform: perspective(600px) rotateX(-90deg);
-    filter: brightness(0.65);
+    transform: rotateX(0deg) translateZ(1px);
   }
   100% {
-    transform: perspective(600px) rotateX(-90deg);
-    filter: brightness(0.35);
-    opacity: 0;
+    transform: rotateX(-90deg) translateZ(1px);
   }
 }
 
 @keyframes splitFlapBottomUnfold {
   0% {
-    transform: perspective(600px) rotateX(90deg);
-    filter: brightness(0.35);
-    opacity: 0;
-  }
-  35% {
-    transform: perspective(600px) rotateX(90deg);
-    filter: brightness(0.5);
-    opacity: 1;
+    transform: rotateX(90deg) translateZ(1px);
   }
   100% {
-    transform: perspective(600px) rotateX(0deg);
-    filter: brightness(1);
-    opacity: 1;
+    transform: rotateX(0deg) translateZ(1px);
   }
 }
 
@@ -330,39 +314,51 @@
   0% {
     opacity: 0;
   }
-  50% {
-    opacity: 0.5;
+  100% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes flapShadowUp {
+  0% {
+    opacity: 0.65;
   }
   100% {
-    opacity: 0.85;
+    opacity: 0;
   }
 }
 
 .animate-flip-top-half {
-  animation: splitFlapTopFold 0.28s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  animation: splitFlapTopFold 0.18s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
   transform-origin: 50% 100%;
-  will-change: transform, opacity, filter;
+  will-change: transform;
 }
 
 .animate-flip-bottom-half {
-  animation: splitFlapBottomUnfold 0.32s cubic-bezier(0.2, 0.8, 0.4, 1) 0.18s forwards;
+  animation: splitFlapBottomUnfold 0.20s cubic-bezier(0.175, 0.885, 0.32, 1) 0.16s both;
   transform-origin: 50% 0%;
-  will-change: transform, opacity, filter;
+  will-change: transform;
 }
 
 .animate-flap-shadow-down {
-  animation: flapShadowDown 0.28s linear forwards;
+  animation: flapShadowDown 0.18s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+  will-change: opacity;
+}
+
+.animate-flap-shadow-up {
+  animation: flapShadowUp 0.20s cubic-bezier(0.175, 0.885, 0.32, 1) 0.16s both;
+  will-change: opacity;
 }
 
 /* Accessibility: Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-flip-top-half,
   .animate-flip-bottom-half,
-  .animate-flap-shadow-down {
+  .animate-flap-shadow-down,
+  .animate-flap-shadow-up {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
-    filter: none !important;
   }
 }
 

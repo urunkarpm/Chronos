@@ -228,14 +228,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {/* Sliding Active Pill Background with Framer Motion Spring */}
             <motion.div
-              className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-gradient-to-r from-gold-500/25 to-amber-500/15 border border-gold-400/50 pointer-events-none"
+              className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-lg bg-gradient-to-r from-gold-500/25 to-amber-500/15 border border-gold-400/50 pointer-events-none"
               animate={{
-                left: mapProjection === 'flat' ? '4px' : 'calc(50%)',
+                x: mapProjection === 'flat' ? 0 : '100%',
               }}
               transition={{
                 type: 'spring',
-                stiffness: 400,
-                damping: 30,
+                stiffness: 450,
+                damping: 35,
               }}
             />
 
@@ -491,14 +491,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="col-span-2 relative p-1 bg-navy-950/80 border border-slate-700/60 rounded-xl glass-card backdrop-blur-md flex items-center select-none">
               {/* Sliding Active Pill Background with Framer Motion Spring */}
               <motion.div
-                className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-gradient-to-r from-gold-500/25 to-amber-500/15 border border-gold-400/50 pointer-events-none"
+                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-lg bg-gradient-to-r from-gold-500/25 to-amber-500/15 border border-gold-400/50 pointer-events-none"
                 animate={{
-                  left: mapProjection === 'flat' ? '4px' : 'calc(50%)',
+                  x: mapProjection === 'flat' ? 0 : '100%',
                 }}
                 transition={{
                   type: 'spring',
-                  stiffness: 400,
-                  damping: 30,
+                  stiffness: 450,
+                  damping: 35,
                 }}
               />
 
