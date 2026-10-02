@@ -290,3 +290,82 @@
   display: block !important;
   pointer-events: none;
 }
+
+/* Authentic Solari Split-Flap Departure Board Card 3D Animations */
+@keyframes splitFlapTopFold {
+  0% {
+    transform: perspective(600px) rotateX(0deg);
+    filter: brightness(1);
+  }
+  50% {
+    transform: perspective(600px) rotateX(-90deg);
+    filter: brightness(0.65);
+  }
+  100% {
+    transform: perspective(600px) rotateX(-90deg);
+    filter: brightness(0.35);
+    opacity: 0;
+  }
+}
+
+@keyframes splitFlapBottomUnfold {
+  0% {
+    transform: perspective(600px) rotateX(90deg);
+    filter: brightness(0.35);
+    opacity: 0;
+  }
+  35% {
+    transform: perspective(600px) rotateX(90deg);
+    filter: brightness(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(600px) rotateX(0deg);
+    filter: brightness(1);
+    opacity: 1;
+  }
+}
+
+@keyframes flapShadowDown {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+.animate-flip-top-half {
+  animation: splitFlapTopFold 0.28s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity, filter;
+}
+
+.animate-flip-bottom-half {
+  animation: splitFlapBottomUnfold 0.32s cubic-bezier(0.2, 0.8, 0.4, 1) 0.18s forwards;
+  transform-origin: 50% 0%;
+  will-change: transform, opacity, filter;
+}
+
+.animate-flap-shadow-down {
+  animation: flapShadowDown 0.28s linear forwards;
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-flip-top-half,
+  .animate-flip-bottom-half,
+  .animate-flap-shadow-down {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}
+
+
+
+

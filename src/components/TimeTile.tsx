@@ -3,6 +3,7 @@ import { X, RefreshCw } from 'lucide-react';
 import { TimeRegion, TemperatureUnit, WeatherData, ExchangeRatesMap } from '../types';
 import { FlagIcon } from './FlagIcon';
 import { AnimatedWeatherIcon } from './AnimatedWeatherIcon';
+import { AirportFlipClock } from './AirportFlipClock';
 import {
   formatTimeInZone,
   getUTCOffsetFormatted,
@@ -144,18 +145,14 @@ const TimeTileComponent: React.FC<TimeTileProps> = ({
           </div>
         </div>
 
-        {/* Main Time Readout & Inline UTC + Temp Indicator */}
-        <div className="flex items-baseline justify-between font-sans tabular-nums">
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl sm:text-2xl font-bold tracking-tight text-white group-hover:text-gold-300 transition-colors leading-none">
-              {formattedTime.hoursMinutes}
-            </span>
-            {!is24Hour && (
-              <span className="ml-0.5 text-[9px] sm:text-[10px] font-bold text-gold-400 uppercase">
-                {formattedTime.amPm}
-              </span>
-            )}
-          </div>
+        {/* Main Time Readout (Airport Timetable Split-Flap Style) & Inline UTC + Temp Indicator */}
+        <div className="flex items-center justify-between font-sans tabular-nums my-0.5">
+          <AirportFlipClock
+            hoursMinutes={formattedTime.hoursMinutes}
+            is24Hour={is24Hour}
+            showSeconds={false}
+            size="sm"
+          />
 
           {/* Inline UTC Offset & Temperature Indicator */}
           <div className="flex items-center gap-1 sm:gap-1.5">

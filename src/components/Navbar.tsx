@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
 import { ChronosLogoMark } from './ChronosLogoMark';
+import { CascadingFlipText } from './CascadingFlipText';
+import { AirportFlipClock } from './AirportFlipClock';
 import { Continent, TimeRegion, MapProjection } from '../types';
 import { formatTimeInZone, playUISound } from '../utils/timeUtils';
 import { searchGlobalLocations, scoreAndSortMatches } from '../utils/locationService';
@@ -31,7 +33,7 @@ interface NavbarProps {
   selectedContinent: Continent;
   onSelectContinent: (continent: Continent) => void;
   is24Hour: boolean;
-  onToggle24Hour: () => void;
+  onToggle24Hour?: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
   mapProjection: MapProjection;
@@ -90,14 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     'Antarctica',
   ];
 
-  // Live UTC time
-  const utcTimeStr = formatTimeInZone('UTC', currentTime, is24Hour).timeStr;
-  const localTimeStr = currentTime.toLocaleTimeString('en-US', {
-    hour12: !is24Hour,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+  // Live UTC and Local formatted time
+  const utcFormatted = formatTimeInZone('UTC', currentTime, is24Hour);
+  const utcTimeStr = `${utcFormatted.hoursMinutes}:${utcFormatted.seconds}`;
+  const localFormatted = formatTimeInZone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', currentTime, is24Hour);
+  const localTimeStr = `${localFormatted.hoursMinutes}:${localFormatted.seconds}`;
 
   // Fast global location search starting from 1st character
   useEffect(() => {
@@ -179,22 +178,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
               <ChronosLogoMark className="w-6 h-6 sm:w-7 sm:h-7 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)]" />
             </div>
-            <div className="min-w-0">
-              <h1 className="font-serif tracking-widest text-base sm:text-xl font-black text-black dark:text-slate-100 flex items-center gap-1.5 leading-none truncate">
-                CHRONOS
-              </h1>
-            </div>
-          </div>
-
-          {/* Desktop UTC Clock Badge (Hidden on small mobile screens to prevent overflow) */}
-          <div className="hidden sm:flex items-center gap-3 pl-3.5 border-l border-slate-950/20 dark:border-slate-700/60 font-sans tabular-nums text-xs shrink-0 select-none">
-            <div className="flex flex-col w-[95px] sm:w-[105px] shrink-0">
-              <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-900 dark:text-slate-400 font-black">UTC</span>
-              <span className="text-amber-900 dark:text-gold-400 font-black text-xs sm:text-sm tracking-wider truncate text-left">{utcTimeStr}</span>
-            </div>
-            <div className="hidden md:flex flex-col pl-3.5 border-l border-slate-950/20 dark:border-slate-800 w-[125px] sm:w-[135px] shrink-0">
-              <span className="text-[9px] uppercase tracking-wider text-slate-900 dark:text-slate-400 font-black">Your Time</span>
-              <span className="text-black dark:text-slate-200 font-black tracking-wider truncate text-left">{localTimeStr}</span>
+            <div className="min-w-0 flex items-center">
+              <CascadingFlipText text="CHRONOS" className="text-base sm:text-xl font-serif font-black text-amber-300 dark:text-gold-300 tracking-widest" />
             </div>
           </div>
         </div>
@@ -302,19 +287,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Globe</span>
             </button>
           </div>
-
-          {/* Desktop 12h/24h Toggle */}
-          <button
-            onClick={() => {
-              if (soundEnabled) playUISound('toggle');
-              onToggle24Hour();
-            }}
-            title="Toggle 12h / 24h format"
-            className="btn-secondary hidden md:inline-flex tabular-nums"
-          >
-            <Clock className="w-3.5 h-3.5 text-gold-400 shrink-0" />
-            <span>{is24Hour ? '24H' : '12H'}</span>
-          </button>
 
           {/* Desktop Currency Selector Toggle */}
           <div className="relative hidden sm:block" ref={currencyDropdownRef}>
@@ -578,18 +550,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>3D Globe Mode</span>
               </button>
             </div>
-
-            {/* 12H/24H Button */}
-            <button
-              onClick={() => {
-                if (soundEnabled) playUISound('toggle');
-                onToggle24Hour();
-              }}
-              className="btn-secondary w-full"
-            >
-              <Clock className="w-3.5 h-3.5 text-gold-400" />
-              <span>Format: {is24Hour ? '24H' : '12H'}</span>
-            </button>
 
             {/* Sound Toggle */}
             <button

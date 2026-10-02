@@ -83,10 +83,9 @@ export function generateRegionTileUrls(regions: TimeRegion[]): string[] {
           const esriUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${tileY}/${tileX}`;
           urls.push(esriUrl);
 
-          // Carto Dark Labels Overlay URL
-          const sub = subdomains[(tileX + tileY) % subdomains.length];
-          const cartoUrl = `https://${sub}.basemaps.cartocdn.com/dark_only_labels/${zoom}/${tileX}/${tileY}.png`;
-          urls.push(cartoUrl);
+          // Esri Boundaries & Places Labels URL (No API key required)
+          const labelsUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/${zoom}/${tileY}/${tileX}`;
+          urls.push(labelsUrl);
         }
       }
     });

@@ -17,6 +17,7 @@ import {
   Thermometer,
 } from 'lucide-react';
 import { FlagIcon } from './FlagIcon';
+import { AirportFlipClock } from './AirportFlipClock';
 import { TimeRegion, TemperatureUnit, WeatherData, DisasterAlert } from '../types';
 import {
   formatTimeInZone,
@@ -157,10 +158,13 @@ export const PinnedDrawer: React.FC<PinnedDrawerProps> = ({
             <span>Local Standard Time</span>
           </div>
 
-          <div className="font-sans tabular-nums text-2xl md:text-4xl font-black text-white tracking-tight flex items-baseline justify-center gap-1">
-            <span>{formattedTime.hoursMinutes}</span>
-            <span className="text-sm md:text-lg font-bold text-gold-400">:{formattedTime.seconds}</span>
-            {!is24Hour && <span className="text-xs md:text-sm font-bold text-gold-400/90 ml-1 uppercase">{formattedTime.amPm}</span>}
+          <div className="font-sans tabular-nums flex items-center justify-center my-1.5 sm:my-2">
+            <AirportFlipClock
+              hoursMinutes={`${formattedTime.hoursMinutes}:${formattedTime.seconds}`}
+              is24Hour={is24Hour}
+              size="md"
+              showSeconds={true}
+            />
           </div>
 
           <div className="flex items-center justify-center gap-2 mt-0.5 md:mt-1 text-[11px] md:text-xs font-sans">

@@ -6,8 +6,9 @@ import { TimeTile } from './components/TimeTile';
 import { PinnedDrawer } from './components/PinnedDrawer';
 import { AddCityModal } from './components/AddCityModal';
 import { HolidaysSidebar } from './components/HolidaysSidebar';
+import { FlipClock } from './components/FlipClock';
 import { GLOBAL_REGIONS, INITIAL_DEFAULT_REGION_IDS } from './data/timezones';
-import { TimeRegion, Continent, MapProjection, TemperatureUnit, ExchangeRatesMap, ThemeMode } from './types';
+import { TimeRegion, Continent, MapProjection, MapTileTheme, TemperatureUnit, ExchangeRatesMap, ThemeMode } from './types';
 import { playUISound } from './utils/timeUtils';
 import { fetchExchangeRates } from './utils/currencyService';
 import { detectUserLocationAndPreferences } from './utils/locationService';
@@ -17,13 +18,21 @@ const STORAGE_CUSTOM_REGIONS = 'chronos_custom_regions';
 const STORAGE_ACTIVE_REGION_IDS = 'chronos_active_region_ids';
 const STORAGE_TEMP_UNIT = 'chronos_temp_unit';
 const STORAGE_HOME_CURRENCY = 'chronos_home_currency';
+const STORAGE_MAP_THEME = 'chronos_map_theme';
 
 export function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [mapProjection, setMapProjection] = useState<MapProjection>('flat');
+  const [mapTheme, setMapTheme] = useState<MapTileTheme>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_MAP_THEME);
+      if (saved === 'satellite' || saved === 'dark') return saved;
+    } catch (e) {}
+    return 'satellite';
+  });
 
-  // App preferences
-  const [is24Hour, setIs24Hour] = useState<boolean>(false);
+  // App preferences (Default to 24H mode)
+  const [is24Hour] = useState<boolean>(true);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [referenceRegionId, setReferenceRegionId] = useState<string | null>(null);
   const [tempUnit, setTempUnit] = useState<TemperatureUnit>(() => {
@@ -59,6 +68,12 @@ export function App() {
       localStorage.setItem(STORAGE_HOME_CURRENCY, homeCurrency);
     } catch (e) {}
   }, [homeCurrency]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_MAP_THEME, mapTheme);
+    } catch (e) {}
+  }, [mapTheme]);
 
   // Enforce dark mode permanently
   useEffect(() => {
@@ -295,6 +310,9 @@ export function App() {
           currentTime={currentTime}
           resetTrigger={resetTrigger}
           mapProjection={mapProjection}
+          mapTheme={mapTheme}
+          onToggleMapTheme={setMapTheme}
+          soundEnabled={soundEnabled}
         />
       </div>
 
@@ -305,7 +323,6 @@ export function App() {
           selectedContinent={selectedContinent}
           onSelectContinent={setSelectedContinent}
           is24Hour={is24Hour}
-          onToggle24Hour={() => setIs24Hour((prev) => !prev)}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((prev) => !prev)}
           mapProjection={mapProjection}

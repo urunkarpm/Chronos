@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
+import { Satellite, Layers } from 'lucide-react';
 import L from 'leaflet';
-import { TimeRegion, MapProjection, ThemeMode } from '../types';
-import { formatTimeInZone, calculateTerminatorLine } from '../utils/timeUtils';
+import { TimeRegion, MapProjection, MapTileTheme, ThemeMode } from '../types';
+import { formatTimeInZone, calculateTerminatorLine, playUISound } from '../utils/timeUtils';
 import { Globe } from './Globe';
 
 interface MapProps {
@@ -16,7 +17,48 @@ interface MapProps {
   currentTime: Date;
   resetTrigger?: number;
   mapProjection?: MapProjection;
+  mapTheme?: MapTileTheme;
+  onToggleMapTheme?: (theme: MapTileTheme) => void;
+  soundEnabled?: boolean;
 }
+
+const TRANSPARENT_TILE_FALLBACK =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+export const MAP_THEMES: Record<
+  MapTileTheme,
+  {
+    name: string;
+    base: string;
+    labels: string;
+    attributionBase: string;
+    attributionLabels: string;
+    nightFillColor: string;
+    nightFillOpacity: number;
+    terminatorColor: string;
+  }
+> = {
+  satellite: {
+    name: 'Satellite',
+    base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    attributionBase: '&copy; Esri, Maxar, Earthstar Geographics',
+    attributionLabels: '&copy; Esri Boundaries & Places',
+    nightFillColor: '#020617',
+    nightFillOpacity: 0.55,
+    terminatorColor: '#F3E5AB',
+  },
+  dark: {
+    name: 'Midnight',
+    base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attributionBase: '&copy; Esri, HERE, Garmin, FAO, NOAA, USGS',
+    attributionLabels: '&copy; Esri Dark Canvas Reference',
+    nightFillColor: '#000000',
+    nightFillOpacity: 0.42,
+    terminatorColor: '#FBBF24',
+  },
+};
 
 export const MapComponent: React.FC<MapProps> = ({
   visibleRegions,
@@ -29,6 +71,9 @@ export const MapComponent: React.FC<MapProps> = ({
   currentTime,
   resetTrigger,
   mapProjection = 'flat',
+  mapTheme = 'satellite',
+  onToggleMapTheme,
+  soundEnabled = true,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -42,7 +87,7 @@ export const MapComponent: React.FC<MapProps> = ({
   const DEFAULT_CENTER: [number, number] = [20, 0];
   const DEFAULT_ZOOM = 2.5;
 
-  // Initialize Map instance with Satellite Night base layer
+  // Initialize Map instance with keyless high-res base and labels layer
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -70,37 +115,33 @@ export const MapComponent: React.FC<MapProps> = ({
       bounceAtZoomLimits: false,
     });
 
-    // Satellite Imagery Base Layer (Dark satellite earth backdrop for both themes)
-    const satImagery = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        maxZoom: 18,
-        subdomains: 'abcd',
-        updateWhenZooming: true,
-        updateWhenIdle: false,
-        keepBuffer: 32,
-        attribution: '&copy; Esri, Maxar, Earthstar Geographics',
-        className: 'gpu-accelerated',
-      }
-    );
+    const currentThemeConfig = MAP_THEMES[mapTheme] || MAP_THEMES.satellite;
 
-    // Country & City Labels Overlay
-    const countryLabels = L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
-      {
-        maxZoom: 18,
-        subdomains: 'abcd',
-        updateWhenZooming: true,
-        updateWhenIdle: false,
-        keepBuffer: 32,
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        className: 'gpu-accelerated',
-      }
-    );
+    // High resolution Satellite or Dark Canvas base layer (Zero API key required)
+    const baseImagery = L.tileLayer(currentThemeConfig.base, {
+      maxZoom: 18,
+      updateWhenZooming: true,
+      updateWhenIdle: false,
+      keepBuffer: 32,
+      attribution: currentThemeConfig.attributionBase,
+      className: 'gpu-accelerated',
+      errorTileUrl: TRANSPARENT_TILE_FALLBACK,
+    });
 
-    baseLayerRef.current = satImagery;
-    labelsLayerRef.current = countryLabels;
-    L.layerGroup([satImagery, countryLabels]).addTo(map);
+    // Reference Country, State & City Labels Overlay (Zero API key required)
+    const placeLabels = L.tileLayer(currentThemeConfig.labels, {
+      maxZoom: 18,
+      updateWhenZooming: true,
+      updateWhenIdle: false,
+      keepBuffer: 32,
+      attribution: currentThemeConfig.attributionLabels,
+      className: 'gpu-accelerated',
+      errorTileUrl: TRANSPARENT_TILE_FALLBACK,
+    });
+
+    baseLayerRef.current = baseImagery;
+    labelsLayerRef.current = placeLabels;
+    L.layerGroup([baseImagery, placeLabels]).addTo(map);
 
     // Create custom map pane for Day/Night solar overlay (above base tiles, below markers)
     if (!map.getPane('terminatorPane')) {
@@ -232,6 +273,26 @@ export const MapComponent: React.FC<MapProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [mapProjection]);
 
+  // Dynamically swap map tile layers when mapTheme changes
+  useEffect(() => {
+    if (!baseLayerRef.current || !labelsLayerRef.current) return;
+    const currentThemeConfig = MAP_THEMES[mapTheme] || MAP_THEMES.satellite;
+    baseLayerRef.current.setUrl(currentThemeConfig.base);
+    labelsLayerRef.current.setUrl(currentThemeConfig.labels);
+
+    if (terminatorPolygonRef.current) {
+      terminatorPolygonRef.current.setStyle({
+        fillColor: currentThemeConfig.nightFillColor,
+        fillOpacity: currentThemeConfig.nightFillOpacity,
+      });
+    }
+    if (terminatorLineRef.current) {
+      terminatorLineRef.current.setStyle({
+        color: currentThemeConfig.terminatorColor,
+      });
+    }
+  }, [mapTheme]);
+
   // Live real-time solar day/night terminator curve overlay
   useEffect(() => {
     if (mapProjection === 'globe') return;
@@ -240,19 +301,19 @@ export const MapComponent: React.FC<MapProps> = ({
 
     try {
       const { line, nightPolygon } = calculateTerminatorLine(currentTime);
-      const isDark = document.documentElement.classList.contains('dark');
+      const currentThemeConfig = MAP_THEMES[mapTheme] || MAP_THEMES.satellite;
 
       // 1. Update/Add Night Shadow Polygon
       if (terminatorPolygonRef.current) {
         terminatorPolygonRef.current.setLatLngs(nightPolygon);
         terminatorPolygonRef.current.setStyle({
-          fillColor: isDark ? '#020617' : '#0f172a',
-          fillOpacity: isDark ? 0.55 : 0.22,
+          fillColor: currentThemeConfig.nightFillColor,
+          fillOpacity: currentThemeConfig.nightFillOpacity,
         });
       } else {
         const polygon = L.polygon(nightPolygon, {
-          fillColor: isDark ? '#020617' : '#0f172a',
-          fillOpacity: isDark ? 0.55 : 0.22,
+          fillColor: currentThemeConfig.nightFillColor,
+          fillOpacity: currentThemeConfig.nightFillOpacity,
           stroke: false,
           interactive: false,
           pane: map.getPane('terminatorPane') ? 'terminatorPane' : 'overlayPane',
@@ -261,15 +322,15 @@ export const MapComponent: React.FC<MapProps> = ({
         terminatorPolygonRef.current = polygon;
       }
 
-      // 2. Update/Add Glowing Gold Solar Terminator Line
+      // 2. Update/Add Glowing Solar Terminator Line
       if (terminatorLineRef.current) {
         terminatorLineRef.current.setLatLngs(line);
         terminatorLineRef.current.setStyle({
-          color: isDark ? '#F3E5AB' : '#d97706',
+          color: currentThemeConfig.terminatorColor,
         });
       } else {
         const polyline = L.polyline(line, {
-          color: isDark ? '#F3E5AB' : '#d97706',
+          color: currentThemeConfig.terminatorColor,
           weight: 3,
           opacity: 0.95,
           dashArray: '8, 6',
@@ -282,7 +343,7 @@ export const MapComponent: React.FC<MapProps> = ({
     } catch (err) {
       console.error('Terminator render error:', err);
     }
-  }, [currentTime, mapProjection]);
+  }, [currentTime, mapProjection, mapTheme]);
 
   // Render dynamic Leaflet HTML Markers for each visible region
   useEffect(() => {
@@ -423,6 +484,46 @@ export const MapComponent: React.FC<MapProps> = ({
         <div ref={mapContainerRef} className="w-full h-full" />
         {/* Ambient Glow Overlay for Flat Map */}
         <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/60" />
+
+        {/* Floating Map Theme Switcher in Flat Map Mode */}
+        {onToggleMapTheme && (
+          <div className="absolute top-[72px] sm:top-[76px] left-3 sm:left-6 z-20 pointer-events-auto animate-in fade-in duration-300">
+            <div className="flex items-center p-0.5 sm:p-1 bg-navy-950/85 backdrop-blur-md border border-slate-700/60 rounded-xl shadow-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  if (soundEnabled) playUISound('click');
+                  onToggleMapTheme('satellite');
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                  mapTheme === 'satellite'
+                    ? 'bg-gold-500/25 text-gold-300 border border-gold-500/60 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Satellite Imagery View"
+              >
+                <Satellite className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xs:inline">Satellite</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (soundEnabled) playUISound('click');
+                  onToggleMapTheme('dark');
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                  mapTheme === 'dark'
+                    ? 'bg-gold-500/25 text-gold-300 border border-gold-500/60 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Midnight Tactical Vector View"
+              >
+                <Layers className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden xs:inline">Midnight</span>
+              </button>
+            </div>
+          </div>
+        )}
       </motion.div>
 
       {/* 3D WebGL Globe Layer */}
