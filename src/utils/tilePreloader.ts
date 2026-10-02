@@ -57,9 +57,13 @@ export function generateRegionTileUrls(regions: TimeRegion[]): string[] {
   const zoomLevels = [2, 3, 4, 5, 6, 7];
   const subdomains = ['a', 'b', 'c', 'd'];
 
-  // Add Globe 3D textures
+  // Add Photorealistic Globe 3D textures
   urls.push('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
   urls.push('https://unpkg.com/three-globe/example/img/earth-topology.png');
+  urls.push('https://unpkg.com/three-globe/example/img/night-sky.png');
+  urls.push('https://unpkg.com/three-globe/example/img/earth-water.png');
+  urls.push('https://unpkg.com/three-globe/example/img/earth-clouds.png');
+  urls.push('https://unpkg.com/three-globe/example/img/earth-night.jpg');
 
   regions.forEach((region) => {
     // Flag icon URL

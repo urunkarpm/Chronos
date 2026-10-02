@@ -27,6 +27,8 @@ export const Globe: React.FC<GlobeProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const globeInstanceRef = useRef<any>(null);
   const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const cloudsMeshRef = useRef<THREE.Mesh | null>(null);
+  const cloudsRafRef = useRef<number | null>(null);
 
   // Identify primary hub city (user region or pinned region or first visible region)
   const homeRegion = useMemo(() => {
@@ -124,35 +126,64 @@ export const Globe: React.FC<GlobeProps> = ({
       const globe = GlobeFactory()(containerRef.current)
         .width(width)
         .height(height)
-        .backgroundColor('rgba(7, 10, 18, 1)')
+        .backgroundColor('rgba(5, 7, 14, 1)')
+        .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
         .atmosphereColor('#38BDF8')
-        .atmosphereAltitude(0.22)
+        .atmosphereAltitude(0.18)
         .showAtmosphere(true)
-        .showGraticules(true);
+        .showGraticules(false);
 
-      // Create Custom Solar Lighting Array
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
-      const sunLight = new THREE.DirectionalLight(0xfff8e7, 3.8);
+      // Create Realistic Solar & Deep-Space Lighting
+      const ambientLight = new THREE.AmbientLight(0x1a2640, 0.45);
+      const sunLight = new THREE.DirectionalLight(0xfffaed, 3.6);
       sunLightRef.current = sunLight;
 
-      // Replace default camera lights with single real-time Sun light + low ambient light
+      // Replace default camera lights with single real-time Sun light + space ambient fill
       if (typeof globe.lights === 'function') {
         globe.lights([ambientLight, sunLight]);
       }
 
-      // Configure Night Lights Texture Overlay on Shadow Side
+      // Configure Night Lights & Ocean Specular Water Glint
       const textureLoader = new THREE.TextureLoader();
       const nightTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-night.jpg');
+      const waterTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-water.png');
 
       if (globe.globeMaterial()) {
         const mat = globe.globeMaterial();
         mat.emissiveMap = nightTexture;
-        mat.emissive = new THREE.Color(0x666666);
-        mat.emissiveIntensity = 0.25;
-        mat.shininess = 15;
+        mat.emissive = new THREE.Color(0xffd580);
+        mat.emissiveIntensity = 0.65;
+        mat.specularMap = waterTexture;
+        mat.specular = new THREE.Color(0x38bdf8);
+        mat.shininess = 28;
+        mat.bumpScale = 10;
       }
+
+      // Volumetric Drifting Clouds Layer floating above Earth's surface
+      const cloudsTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-clouds.png');
+      const globeRadius = typeof globe.getGlobeRadius === 'function' ? globe.getGlobeRadius() : 100;
+      const cloudsMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(globeRadius * 1.004, 75, 75),
+        new THREE.MeshStandardMaterial({
+          map: cloudsTexture,
+          transparent: true,
+          opacity: 0.82,
+          blending: THREE.NormalBlending,
+          roughness: 0.9,
+        })
+      );
+      globe.scene().add(cloudsMesh);
+      cloudsMeshRef.current = cloudsMesh;
+
+      const animateClouds = () => {
+        if (cloudsMeshRef.current) {
+          cloudsMeshRef.current.rotation.y += 0.00035;
+        }
+        cloudsRafRef.current = requestAnimationFrame(animateClouds);
+      };
+      animateClouds();
 
       // Initial sun position calculation
       const initialSun = getSubsolarPoint(currentTime);
@@ -201,11 +232,11 @@ export const Globe: React.FC<GlobeProps> = ({
         .labelLat((d: any) => d.lat)
         .labelLng((d: any) => d.lng)
         .labelText((d: any) => d.name)
-        .labelSize((d: any) => d.size || 0.75)
+        .labelSize((d: any) => (d.size ? d.size * 0.85 : 0.65))
         .labelDotRadius(0)
-        .labelColor(() => 'rgba(248, 250, 252, 0.55)')
-        .labelResolution(2)
-        .labelAltitude(0.008);
+        .labelColor(() => 'rgba(255, 255, 255, 0.45)')
+        .labelResolution(3)
+        .labelAltitude(0.009);
 
       // Custom Floating HTML Elements for City Badges
       globe
@@ -246,11 +277,11 @@ export const Globe: React.FC<GlobeProps> = ({
       // Orbit Controls Configuration
       const controls = globe.controls();
       controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.45;
+      controls.autoRotateSpeed = 0.35;
       controls.enableZoom = true;
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
-      controls.minDistance = 150;
+      controls.minDistance = 140;
       controls.maxDistance = 600;
 
       // Default POV
@@ -283,7 +314,18 @@ export const Globe: React.FC<GlobeProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (cloudsRafRef.current) {
+        cancelAnimationFrame(cloudsRafRef.current);
+      }
       if (globeInstanceRef.current) {
+        if (cloudsMeshRef.current) {
+          try {
+            globeInstanceRef.current.scene().remove(cloudsMeshRef.current);
+            cloudsMeshRef.current.geometry.dispose();
+            (cloudsMeshRef.current.material as THREE.Material).dispose();
+          } catch (e) {}
+          cloudsMeshRef.current = null;
+        }
         globeInstanceRef.current._destructor();
         globeInstanceRef.current = null;
       }
