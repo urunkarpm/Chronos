@@ -94,39 +94,80 @@ export function getSatelliteLiveState(sat: SatelliteDefinition, date: Date): Sat
 }
 
 /**
- * Generate a complete 3D orbital trajectory path by propagating around the current orbital period
+ * Generate a physically realistic, closed 3D Keplerian orbital path ring in space.
+ * Uses instantaneous state vectors (position r and velocity v) to calculate the
+ * orbital plane normal (angular momentum h = r x v) and in-plane basis vectors.
+ * Traces a closed 360-degree orbital ellipse/circle centered on Earth with the satellite
+ * situated precisely on the path at theta = 0.
  */
 export function getSatelliteOrbitalPath(
   sat: SatelliteDefinition,
   date: Date,
-  pointsCount: number = 90
+  pointsCount: number = 120
 ): SatelliteOrbitalPath | null {
   const satrec = getSatrec(sat);
   if (!satrec) return null;
 
   try {
-    const meanMotionRadMin = satrec.no_kozai || satrec.no || 0.07;
-    const periodMinutes = meanMotionRadMin > 0 ? (2 * Math.PI) / meanMotionRadMin : 90;
+    const pv = satellite.propagate(satrec, date);
+    if (!pv || !pv.position || typeof pv.position === 'boolean' || !pv.velocity || typeof pv.velocity === 'boolean') {
+      return null;
+    }
 
+    const r = pv.position;
+    const v = pv.velocity;
+
+    // Specific angular momentum vector h = r x v (normal to the orbital plane)
+    const hx = r.y * v.z - r.z * v.y;
+    const hy = r.z * v.x - r.x * v.z;
+    const hz = r.x * v.y - r.y * v.x;
+    const hMag = Math.hypot(hx, hy, hz);
+    if (hMag === 0) return null;
+
+    const uhx = hx / hMag;
+    const uhy = hy / hMag;
+    const uhz = hz / hMag;
+
+    // Radial unit vector ur = r / |r|
+    const rMag = Math.hypot(r.x, r.y, r.z);
+    if (rMag === 0) return null;
+
+    const urx = r.x / rMag;
+    const ury = r.y / rMag;
+    const urz = r.z / rMag;
+
+    // In-plane tangent vector uv = uh x ur (perpendicular to ur in direction of velocity)
+    const uvx = uhy * urz - uhz * ury;
+    const uvy = uhz * urx - uhx * urz;
+    const uvz = uhx * ury - uhy * urx;
+
+    const gmst = satellite.gstime(date);
     const points: Array<{ lat: number; lng: number; alt: number }> = [];
-    const stepMinutes = periodMinutes / pointsCount;
-    const baseTimeMs = date.getTime();
+
+    // Calculate scaled altitude for the orbit path
+    const gdCurrent = satellite.eciToGeodetic(r, gmst);
+    const altScaled = scaleAltitude(gdCurrent.height);
 
     for (let i = 0; i <= pointsCount; i++) {
-      const stepDate = new Date(baseTimeMs + (i - pointsCount / 2) * stepMinutes * 60 * 1000);
-      const pv = satellite.propagate(satrec, stepDate);
-      if (!pv || !pv.position || typeof pv.position === 'boolean') continue;
+      const theta = (i / pointsCount) * 2 * Math.PI;
+      const cosT = Math.cos(theta);
+      const sinT = Math.sin(theta);
 
-      const gmst = satellite.gstime(stepDate);
-      const gd = satellite.eciToGeodetic(pv.position, gmst);
+      // 3D position vector in ECI
+      const pEci = {
+        x: rMag * (cosT * urx + sinT * uvx),
+        y: rMag * (cosT * ury + sinT * uvy),
+        z: rMag * (cosT * urz + sinT * uvz),
+      };
+
+      const gd = satellite.eciToGeodetic(pEci, gmst);
       const lat = satellite.degreesLat(gd.latitude);
       const lng = satellite.degreesLong(gd.longitude);
-      const altKm = gd.height;
 
       points.push({
         lat,
         lng,
-        alt: scaleAltitude(altKm),
+        alt: altScaled,
       });
     }
 
@@ -136,7 +177,7 @@ export function getSatelliteOrbitalPath(
       points,
     };
   } catch (err) {
-    console.error(`Error calculating orbital path for ${sat.name}`, err);
+    console.error(`Error calculating Keplerian orbital path for ${sat.name}`, err);
     return null;
   }
 }

@@ -37,7 +37,7 @@ export const SatelliteTelemetryHUD: React.FC<SatelliteTelemetryHUDProps> = ({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.96 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute bottom-6 left-6 z-40 max-w-sm sm:max-w-md w-full bg-navy-950/90 backdrop-blur-xl border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] p-5 text-slate-100 select-none overflow-hidden"
+        className="absolute top-[120px] sm:top-[124px] left-3 sm:left-6 z-40 max-w-[calc(100vw-24px)] xs:max-w-sm sm:max-w-md w-full max-h-[calc(100vh-150px)] overflow-y-auto custom-scrollbar bg-navy-950/90 backdrop-blur-xl border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] p-5 text-slate-100 select-none"
       >
         {/* Subtle glowing ambient accent behind header */}
         <div

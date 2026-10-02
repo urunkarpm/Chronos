@@ -323,7 +323,7 @@ export const Globe: React.FC<GlobeProps> = ({
         })
         .htmlTransitionDuration(300);
 
-      // 3D Orbital Trajectory Lines
+      // 3D Orbital Trajectory Lines (Keplerian planar rings in space)
       globe
         .pathsData([])
         .pathPoints((d: any) => d.points)
@@ -331,10 +331,10 @@ export const Globe: React.FC<GlobeProps> = ({
         .pathPointLng((p: any) => p.lng)
         .pathPointAlt((p: any) => p.alt)
         .pathColor((d: any) => d.color)
-        .pathStroke(1.2)
+        .pathStroke((d: any) => (d.satelliteId === selectedSatelliteId ? 2.5 : 1.1))
         .pathDashLength(0.08)
-        .pathDashGap(0.04)
-        .pathDashAnimateTime(12000);
+        .pathDashGap(0.03)
+        .pathDashAnimateTime(14000);
 
       // Realistic 3D Satellite Spacecraft Layer
       globe
@@ -461,16 +461,25 @@ export const Globe: React.FC<GlobeProps> = ({
     }
   }, [arcsData, ringsData, htmlData, pinnedRegionId, visibleRegions]);
 
-  // Pre-calculate full 3D orbital trajectory loops when satellites are enabled
+  // Calculate smooth 3D closed Keplerian orbital trajectory rings when satellites are enabled
   useEffect(() => {
     if (!showSatellites) {
       setOrbitalPaths([]);
       return;
     }
-    const paths = SATELLITE_CATALOG.map((sat) =>
-      getSatelliteOrbitalPath(sat, currentTime, 80)
-    ).filter(Boolean) as SatelliteOrbitalPath[];
-    setOrbitalPaths(paths);
+
+    const updatePaths = () => {
+      const now = new Date();
+      const paths = SATELLITE_CATALOG.map((sat) =>
+        getSatelliteOrbitalPath(sat, now, 120)
+      ).filter(Boolean) as SatelliteOrbitalPath[];
+      setOrbitalPaths(paths);
+    };
+
+    updatePaths();
+    // Refresh orbital rings every 10 seconds to lock with Earth's sidereal rotation
+    const interval = setInterval(updatePaths, 10000);
+    return () => clearInterval(interval);
   }, [showSatellites]);
 
   // Propagate real-time satellite geodetic coordinates, speed and eclipse every second
@@ -499,13 +508,14 @@ export const Globe: React.FC<GlobeProps> = ({
     if (!globe) return;
 
     if (showSatellites) {
+      globe.pathStroke((d: any) => (d.satelliteId === selectedSatelliteId ? 2.5 : 1.1));
       globe.pathsData(orbitalPaths);
       globe.objectsData(satelliteStates);
     } else {
       globe.pathsData([]);
       globe.objectsData([]);
     }
-  }, [showSatellites, satelliteStates, orbitalPaths]);
+  }, [showSatellites, satelliteStates, orbitalPaths, selectedSatelliteId]);
 
   return (
     <div className="relative w-full h-full bg-navy-950 overflow-hidden select-none">
@@ -514,14 +524,14 @@ export const Globe: React.FC<GlobeProps> = ({
       {/* Futuristic Vignette Glow Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-radial-gradient from-transparent via-transparent to-navy-950/70" />
 
-      {/* 🛰️ Satellite Fleet Toggle Control */}
-      <div className="globe-satellite-toggle absolute top-20 right-4 sm:top-24 sm:right-6 z-30 flex items-center gap-2">
+      {/* 🛰️ Satellite Fleet Toggle Control (Top-Left, clear of Holiday Calendar and Pinned Drawer) */}
+      <div className="globe-satellite-toggle absolute top-[72px] sm:top-[76px] left-3 sm:left-6 z-30 flex items-center gap-2 pointer-events-auto">
         <button
           onClick={() => handleToggleSatellites(!showSatellites)}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-lg active:scale-95 ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-md transition-all duration-200 shadow-xl active:scale-95 ${
             showSatellites
-              ? 'bg-navy-900/90 border-sky-400/60 text-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
-              : 'bg-navy-950/70 border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/25'
+              ? 'bg-navy-950/90 border-sky-400/60 text-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
+              : 'bg-navy-950/80 border-slate-700/80 text-slate-400 hover:text-slate-200 hover:border-slate-600'
           }`}
           title={showSatellites ? 'Hide Orbital Satellites' : 'Show Orbital Satellites (ISS, GPS, Hubble)'}
         >
